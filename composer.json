@@ -1,0 +1,25 @@
+{
+    "name": "jasny/formbuilder",
+    "description": "A form builder for HTML5 and Twitter Bootstrap",
+    "keywords": ["forms", "bootstrap"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Arnold Daniels",
+            "email": "arnold@jasny.net",
+            "homepage": "http://www.jasny.net"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/jasny/formbuilder/issues",
+        "source": "https://github.com/jasny/formbuilder"
+    },
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "autoload": {
+        "psr-0": {
+            "Jasny\\FormBuilder": "src/"
+        }
+    }
+}
