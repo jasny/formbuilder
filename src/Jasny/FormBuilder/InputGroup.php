@@ -30,7 +30,7 @@ class InputGroup extends ChoiceControl
     {
         $this->getId();
         $name = $this->getAttr('name');
-        $type = $this->getAttr('multiple') ? 'radio' : 'checkbox';
+        $type = $this->getAttr('multiple') ? 'checkbox' : 'radio';
 
         $selected_first = (boolean)$this->getOption('selected-first');
         
