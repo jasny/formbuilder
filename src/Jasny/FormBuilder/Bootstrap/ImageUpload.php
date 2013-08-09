@@ -65,7 +65,8 @@ class ImageUpload extends FileUpload
 <div{$attr_html} data-provides="fileupload">
   $thumbnail
   <div>
-    <span class="btn btn-file"><span class="fileupload-new">$button_select</span><span class="fileupload-exists">$button_change</span><input type="file" name="$name"/></span><button class="btn fileupload-exists" data-dismiss="fileupload">$button_remove</button>
+    <span class="btn btn-file"><span class="fileupload-new">$button_select</span><span class="fileupload-exists">$button_change</span><input type="file" name="$name"/></span>
+    <button class="btn fileupload-exists" data-dismiss="fileupload">$button_remove</button>
   </div>
 </div>
 HTML;
