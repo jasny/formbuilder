@@ -133,7 +133,9 @@ abstract class Control extends Element
      */
     public function getOptions()
     {
-        return parent::getOptions() + ['container'=>true, 'label'=>(boolean)$this->getDescription()];
+        $options = parent::getOptions() + ['container'=>true];
+        if (!isset($this->options['label']) && !$this->getDescription()) $options['label'] = false;
+        return $options;
     }
     
 
