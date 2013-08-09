@@ -72,7 +72,7 @@ abstract class Control extends Element
      * Set the name of the control.
      * 
      * @param string $name
-     * @return Boostrap/Control $this
+     * @return Control $this
      */
     public function setName($name)
     {
@@ -93,7 +93,7 @@ abstract class Control extends Element
      * Set the value of the control.
      * 
      * @param mixed $value
-     * @return Boostrap/Control $this
+     * @return Control $this
      */
     abstract public function setValue($value);
     
@@ -108,7 +108,7 @@ abstract class Control extends Element
      * Set the description of the control.
      * 
      * @param string $description
-     * @return Boostrap/Control $this
+     * @return Control $this
      */
     public function setDescription($description)
     {
