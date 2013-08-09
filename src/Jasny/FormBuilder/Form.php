@@ -34,7 +34,7 @@ class Form extends Group
         if ($id) return $id;
         
         $name = $this->getAttr('name');
-        $id = $name ? $name . 'Form' : base_convert(uniqid(), 16, 36);
+        $id = $name ? $name . '-form' : base_convert(uniqid(), 16, 36);
         
         $this->setAttr('id', $id);
         return $id;
