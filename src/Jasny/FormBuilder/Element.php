@@ -227,6 +227,7 @@ abstract class Element
         
         $str = "";
         foreach ($attrs as $key=>$value) {
+            if (!isset($value) || $value === false) continue;
             $str .= ' ' . htmlentities($key) . '="' . htmlentities($value) . '"';
         }
         
