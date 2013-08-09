@@ -13,7 +13,7 @@ class InputGroup extends ChoiceControl
      * @param boolean $cast  Cast to a string
      * @return array
      */
-    public function getAttrs($cast)
+    public function getAttrs($cast=true)
     {
         $attrs = parent::getAttrs($cast);
         $attrs['class'] = (empty($attrs['class']) ? '' : $attrs['class'] . ' ') . 'input-group';

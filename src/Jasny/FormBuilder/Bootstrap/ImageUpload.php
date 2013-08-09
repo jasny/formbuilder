@@ -32,7 +32,7 @@ class ImageUpload extends FileUpload
      */
     protected function render()
     {
-        $options = $this->getOptions;
+        $options = $this->getOptions();
         
         $hidden = null;
         $image = null;

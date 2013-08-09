@@ -41,16 +41,10 @@ class Textarea extends Control
      * @param boolean $cast  Cast to a string
      * @return array
      */
-    public function getAttrs($cast)
+    public function getAttrs($cast=true)
     {
         $attr = parent::getAttrs($cast);
-        $type = $attr['type'];
-        
-        if (!isset($attr['value']) && ($type == 'button' || $type == 'submit' || $type == 'reset')) {
-            $attr['value'] = $this->getDescription();
-        } elseif (!isset($attr['placeholder']) && !$this->getOption('label')) {
-            $attr['placeholder'] = $this->getDescription();
-        }
+        if (!isset($attr['placeholder']) && !$this->getOption('label')) $attr['placeholder'] = $this->getDescription();
         
         return $attr;
     }
