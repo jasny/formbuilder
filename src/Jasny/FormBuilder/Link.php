@@ -20,7 +20,7 @@ class Link extends Element
      * Element options 
      * @var array
      */
-    protected $options = ['container'=>true, 'html'=>false];
+    protected $options = ['html'=>false];
     
 
     /**
@@ -58,6 +58,15 @@ class Link extends Element
         return $this->text;
     }
 
+    /**
+     * Get all options.
+     * 
+     * @return array
+     */
+    public function getOptions()
+    {
+        return parent::getOptions() + ['container'=>true];
+    }
     
     /**
      * Validate the element.
@@ -82,7 +91,7 @@ class Link extends Element
         $html = '<a' . $this->renderAttrs() . '>' . $content . '</a>';
         
         if ($options['container']) {
-            if ($this->getAttr('id')) $id_attr = ' id="' . $this->getAttr('id') . '-container"';
+            $id_attr = $this->getAttr('id') ? ' id="' . $this->getAttr('id') . '-container"' : '';
             $html = "<div{$id_attr} class=\"control-container\">\n{$html}\n</div>";
         }
         
