@@ -8,5 +8,5 @@ use Jasny\FormBuilder as Base;
  */
 class InputGroup extends Base\InputGroup
 {
-    use ControlGroup;
+    use Base\Boostrap;
 }

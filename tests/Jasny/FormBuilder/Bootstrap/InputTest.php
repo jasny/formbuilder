@@ -37,7 +37,7 @@ class InputTest extends \PHPUnit_Framework_TestCase
     {
         $input = new Input('test', 'A Test', ['class'=>'subinput'], ['foo'=>'bar']);
         
-        $attrs = ['name'=>'test', 'class'=>'subinput', 'type'=>'text'];
+        $attrs = ['name'=>'test', 'class'=>'subinput', 'type'=>'text', 'placeholder'=>'A Test'];
         $this->assertSame($attrs, $input->getAttrs(false));
         $this->assertSame('bar', $input->getOption('foo'));
         $this->assertSame('A Test', $input->getDescription());
@@ -248,6 +248,8 @@ HTML;
      */
     public function testRender_ControlGroup()
     {
+        echo "\n";
+        
         $html = <<<HTML
 <div class="control-group">
 <label class="control-label" for="inputEmail">Email</label>
@@ -258,9 +260,11 @@ HTML;
 HTML;
         
         $this->input->setOption('container', true);
+        $this->input->setOption('label', true);
         $this->input->setDescription('Email');
         $this->input->setAttr('id', 'inputEmail');
         
-        $this->assertSame($html, (string)$this->input);
+        $rendered = (string)$this->input;
+        $this->assertSame($html, $rendered);
     }
 }

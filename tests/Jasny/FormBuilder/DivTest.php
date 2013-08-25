@@ -1,6 +1,6 @@
 <?php
 
-namespace Jasny\FormBuilder\Bootstrap;
+namespace Jasny\FormBuilder;
 
 /**
  * Tests for <div> in Bootstrap Form generator

@@ -218,7 +218,7 @@ class FormTest extends \PHPUnit_Framework_TestCase
         $this->form->setAttr('id', null);
         $this->form->setAttr('name', 'test');
         $id = $this->form->getId();
-        $this->assertSame('testForm', $this->form->getId());
+        $this->assertSame('test-form', $this->form->getId());
     }
     
     

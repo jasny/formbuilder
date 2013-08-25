@@ -1,12 +1,31 @@
 <?php
 
-namespace Jasny\FormBuilder\Bootstrap;
+namespace Jasny\FormBuilder;
 
 /**
- * Use a Bootstrap control-group as container for a control
+ * Render element for use with Bootstrap
  */
-trait ControlGroup
+trait Bootstrap
 {
+    /**
+     * Get all options.
+     * 
+     * @return array
+     */
+    public function getOptions()
+    {
+        if ($this instanceof Form) {
+            $form_inline = preg_match('/\b(form-inline|form-search)\b/', $this->getAttr('class'));
+
+            return parent::getOptions() + [
+                'container' => !$form_inline,
+                'label' => !$form_inline
+            ];
+        }
+        
+        return parent::getOptions();
+    }
+    
     /**
      * Render the input control to HTML.
      * 
@@ -20,12 +39,12 @@ trait ControlGroup
         $error = $this->getError();
         
         // Build <label>
-        if ($options['label'] === 'inside') {
+        if (isset($options['label']) && $options['label'] === 'inside') {
             $html = "<label class=\"" . $this->getAttr('type') . "\">\n"
                 . $html . "\n"
                 . $this->getDescription() . ($this->getAttr('required') ? $options['required-suffix'] : '') . "\n"
                 . "</label>";
-        } elseif ($options['label']) {
+        } elseif (!empty($options['label'])) {
             $class = ($options['container'] ? ' class="control-label"' : '');
             $label = "<label{$class} for=\"" . $this->getId() . "\">"
                 . $this->getDescription() . ($this->getAttr('required') ? $options['required-suffix'] : '')

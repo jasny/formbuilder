@@ -8,7 +8,7 @@ use Jasny\FormBuilder as Base;
  */
 class FileUpload extends Base\Control
 {
-    use ControlGroup;
+    use Base\Boostrap;
     
     static public $buttons = array(
         'select' => "Select file",

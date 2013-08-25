@@ -8,5 +8,5 @@ use Jasny\FormBuilder as Base;
  */
 class Select extends Base\Select
 {
-    use ControlGroup;
+    use Base\Boostrap;
 }
