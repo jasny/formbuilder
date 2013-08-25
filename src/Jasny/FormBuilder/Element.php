@@ -270,7 +270,17 @@ abstract class Element
     public function build($element, array $args=[])
     {
         if ($this->parent) return $this->parent->build($element, $args);
-        
+        return $this->buildElement($element, $args);
+    }
+    
+    /**
+     * Create a form element
+     * 
+     * @param string $element
+     * @param array  $args     Constructor arguments
+     */
+    protected function buildElement($element, array $args)
+    {
         $class = __NAMESPACE__ . '\\' . str_replace(' ', '', ucwords(str_replace('-', ' ', $element)));
         if (!class_exists($class)) throw new \Exception("Unable to build a $element.");
         

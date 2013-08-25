@@ -68,19 +68,19 @@ trait Bootstrap
     
     
     /**
-     * Factory method
+     * Create a form element
      * 
      * @param string $element
      * @param array  $args     Constructor arguments
      */
-    public function build($element, array $args=[])
+    public function buildElement($element, array $args=[])
     {
-        if ($this->parent) return $this->parent->build($element, $args);
-        
         $class =  __NAMESPACE__ . '\Bootstrap\\' . str_replace(' ', '', ucwords(str_replace('-', ' ', $element)));
-        if (!class_exists($class)) return Element::build($element, $args);
+        if (class_exists($class)) {
+            $refl = new \ReflectionClass($class);
+            return $refl->newInstanceArgs($args);
+        }
         
-        $refl = new \ReflectionClass($class);
-        return $refl->newInstanceArgs($args);
+        return Element::buildElement($element, $args);        
     }
 }
