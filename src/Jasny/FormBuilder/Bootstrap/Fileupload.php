@@ -8,7 +8,7 @@ use Jasny\FormBuilder as Base;
  */
 class Fileupload extends Base\Control
 {
-    use Base\Boostrap;
+    use Base\Bootstrap;
     
     static public $buttons = array(
         'select' => "Select file",

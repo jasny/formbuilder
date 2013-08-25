@@ -43,6 +43,8 @@ abstract class Group extends Element
      */
     public function begin($element)
     {
+        if (is_string($element) && $element[0] !== '<') $element = $this->build($element, array_slice(func_get_args(), 1));
+        
         $this->add($element);
         return $element;
     }

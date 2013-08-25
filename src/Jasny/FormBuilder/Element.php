@@ -267,10 +267,12 @@ abstract class Element
      * @param string $element
      * @param array  $args     Constructor arguments
      */
-    public static function build($element, array $args=[])
+    public function build($element, array $args=[])
     {
+        if ($this->parent) return $this->parent->build($element, $args);
+        
         $class = __NAMESPACE__ . '\\' . str_replace(' ', '', ucwords(str_replace('-', ' ', $element)));
-        if (!class_exists($class)) throw new Exception("Unable to build a $element.");
+        if (!class_exists($class)) throw new \Exception("Unable to build a $element.");
         
         $refl = new \ReflectionClass($class);
         return $refl->newInstanceArgs($args);

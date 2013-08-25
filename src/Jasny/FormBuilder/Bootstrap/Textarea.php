@@ -8,5 +8,5 @@ use Jasny\FormBuilder as Base;
  */
 class Textarea extends Base\Textarea
 {
-    use Base\Boostrap;
+    use Base\Bootstrap;
 }

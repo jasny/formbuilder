@@ -73,9 +73,11 @@ trait Bootstrap
      * @param string $element
      * @param array  $args     Constructor arguments
      */
-    public static function build($element, array $args=[])
+    public function build($element, array $args=[])
     {
-        $class =  __CLASS__ . '\\' . str_replace(' ', '', ucwords(str_replace('-', ' ', $element)));
+        if ($this->parent) return $this->parent->build($element, $args);
+        
+        $class =  __NAMESPACE__ . '\Bootstrap\\' . str_replace(' ', '', ucwords(str_replace('-', ' ', $element)));
         if (!class_exists($class)) return Element::build($element, $args);
         
         $refl = new \ReflectionClass($class);
