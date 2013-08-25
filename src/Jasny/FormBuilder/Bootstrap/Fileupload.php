@@ -6,7 +6,7 @@ use Jasny\FormBuilder as Base;
 /**
  * Representation of a Jasny Bootstrap file upload widget.
  */
-class FileUpload extends Base\Control
+class Fileupload extends Base\Control
 {
     use Base\Boostrap;
     

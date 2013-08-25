@@ -23,11 +23,12 @@ abstract class Group extends Element
     /**
      * Add an element to the group.
      * 
-     * @param Boostrap/Element|string $element
-     * @return Bootstrap/Group  $this
+     * @param Element|string $element
+     * @return Group  $this
      */
     public function add($element)
     {
+        if (is_string($element) && $element[0] !== '<') $element = $this->build($element, array_slice(func_get_args(), 1));
         if ($element instanceof Element) $element->parent = $this;
         
         $this->elements[] = $element;
@@ -37,10 +38,10 @@ abstract class Group extends Element
     /**
      * Add an element and return it.
      * 
-     * @param Boostrap/Element  $element
-     * @return Bootstrap/Element  $element
+     * @param Element|string  $element
+     * @return Element  $element
      */
-    public function begin(Element $element)
+    public function begin($element)
     {
         $this->add($element);
         return $element;
@@ -101,7 +102,7 @@ abstract class Group extends Element
      * Set the values of the controls.
      * 
      * @param array $values
-     * @return Bootstrap/Group  $this
+     * @return Group  $this
      */
     public function setValues($values)
     {

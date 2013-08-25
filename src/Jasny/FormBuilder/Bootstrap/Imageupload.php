@@ -5,7 +5,7 @@ namespace Jasny\FormBuilder\Bootstrap;
 /**
  * Representation of a Jasny Bootstrap file upload widget.
  */
-class ImageUpload extends FileUpload
+class Imageupload extends Fileupload
 {
     /**
      * Create base64 encoded image to embed in HTML 

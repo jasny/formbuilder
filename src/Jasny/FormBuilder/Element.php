@@ -259,4 +259,20 @@ abstract class Element
         
         return $html;
     }
+    
+    
+    /**
+     * Factory method
+     * 
+     * @param string $element
+     * @param array  $args     Constructor arguments
+     */
+    public static function build($element, array $args=[])
+    {
+        $class = __NAMESPACE__ . '\\' . str_replace(' ', '', ucwords(str_replace('-', ' ', $element)));
+        if (!class_exists($class)) throw new Exception("Unable to build a $element.");
+        
+        $refl = new \ReflectionClass($class);
+        return $refl->newInstanceArgs($args);
+    }
 }
