@@ -4,8 +4,11 @@ namespace Jasny\FormBuilder;
 
 /**
  * Representation of a set of radio buttons or checkboxes in a form.
+ * 
+ * Options
+ *  - selected-first  Put the selected option(s) on top of the list
  */
-class InputGroup extends ChoiceControl
+class Choice extends ChoiceControl
 {
     /**
      * Get all HTML attributes.
@@ -26,7 +29,7 @@ class InputGroup extends ChoiceControl
      * 
      * @return string
      */
-    protected function render()
+    protected function generateControl()
     {
         $this->getId();
         $name = $this->getAttr('name');
@@ -50,11 +53,9 @@ class InputGroup extends ChoiceControl
         }
         
         // Build html control
-        $html = "<div" . $this->renderAttrs(['name'=>null, 'multiple'=>null]) . ">\n"
+        return "<div" . $this->renderAttrs(['name'=>null, 'multiple'=>null]) . ">\n"
             . "<input type=\"hidden\" name=\"" . htmlentities($this->getName()) . "\" value=\"\">\n"
             . join("\n", array_merge($inputs_first, $inputs))
             . "</div>\n";
-        
-        return $this->renderContainer($html);
     }
 }

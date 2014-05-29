@@ -4,11 +4,17 @@ namespace Jasny\FormBuilder;
 
 /**
  * Base class of form control elements.
+ * 
+ * @internal The generate* functions generate the HTML of the control.
+ * @internal The render* functions apply decoration to the generated HTML.
+ * @internal The get* functions are the public methods to get a subcomponent.
  */
-abstract class Control extends Element
+abstract class Control extends Node implements Element
 {
+    use Validation;
+    
     /**
-     * Control description
+     * Element description
      * @var string
      */
     protected $description;
@@ -26,7 +32,7 @@ abstract class Control extends Element
      * @param array $name
      * @param array $description  Description as displayed on the label 
      * @param array $attrs        HTML attributes
-     * @param array $options      Element options
+     * @param array $options      Node options
      */
     public function __construct($name=null, $description=null, array $attrs=[], array $options=[])
     {
@@ -45,7 +51,9 @@ abstract class Control extends Element
     public function getForm()
     {
         $parent = $this->getParent();
-        while ($parent && !$parent instanceof Form) $parent = $parent->getParent();
+        while ($parent && !$parent instanceof Form) {
+            $parent = $parent->getParent();
+        }
         
         return $parent;
     }
@@ -69,10 +77,10 @@ abstract class Control extends Element
     }
 
     /**
-     * Set the name of the control.
+     * Set the name of the element.
      * 
      * @param string $name
-     * @return Control $this
+     * @return Element $this
      */
     public function setName($name)
     {
@@ -80,35 +88,35 @@ abstract class Control extends Element
     }
     
     /**
-     * Get the name of the control.
+     * Return the name of the control.
      * 
      * @return string
      */
     public function getName()
     {
-        return $this->getAttr('name');
+        return preg_replace('/\[\]$/', '', $this->getAttr('name'));
     }
     
     /**
-     * Set the value of the control.
+     * Set the value of the element.
      * 
      * @param mixed $value
-     * @return Control $this
+     * @return Element $this
      */
     abstract public function setValue($value);
     
     /**
-     * Get the value of the control.
+     * Get the value of the element.
      * 
      * @return mixed
      */
     abstract public function getValue();
     
     /**
-     * Set the description of the control.
+     * Set the description of the element.
      * 
      * @param string $description
-     * @return Control $this
+     * @return Element $this
      */
     public function setDescription($description)
     {
@@ -117,7 +125,7 @@ abstract class Control extends Element
     }
     
     /**
-     * Get the description of the control.
+     * Get the description of the element.
      * 
      * @return string
      */
@@ -133,114 +141,15 @@ abstract class Control extends Element
      */
     public function getOptions()
     {
-        $options = parent::getOptions() + ['container'=>true];
-        if (!isset($this->options['label']) && !$this->getDescription()) $options['label'] = false;
+        $options = parent::getOptions() + ['container' => true];
+        
+        if (!isset($this->options['label']) && !$this->getDescription()) {
+            $options['label'] = false;
+        }
+        
         return $options;
     }
-    
 
-    /**
-     * Validate if the control has a value if it's required.
-     * 
-     * @return boolean
-     */
-    protected function validateRequired()
-    {
-        if ($this->getAttr('required')) {
-            $value = $this->getValue();
-            if ($value === null || $value === '') {
-                $this->error = $this->setError($this->getOption('error:required'));
-                return false;
-            }
-        }
-        
-        return true;
-    }
-    
-    /**
-     * Validate if min and max for value.
-     * 
-     * @return boolean
-     */
-    protected function validateMinMax()
-    {
-        $value = $this->getValue();
-        if ($value instanceof DateTime) $value = $value->format('c');
-        
-        $min = $this->getAttr('min');
-        if (isset($min) && $min !== false && $value < $min) {
-            $this->setError($this->getOption('error:min'));
-            return false;
-        }
-        
-        $max = $this->getAttr('max');
-        if (isset($max) && $max !== false && $value > $max) {
-            $this->setError($this->getOption('error:max'));
-            return false;
-        }
-        
-        return true;
-    }
-
-    /**
-     * Validate the length of the value.
-     * 
-     * @return boolean
-     */
-    protected function validateLength()
-    {
-        $value = $this->getValue();
-        
-        $minlength = $this->getAttr('minlength');
-        if (isset($minlength) && $minlength !== false && strlen($value) > $minlength) {
-            $this->setError($this->getOption('error:minlength'));
-            return false;
-        }
-        
-        $maxlength = $this->getAttr('maxlength');
-        if (isset($maxlength) && $maxlength !== false && strlen($value) > $maxlength) {
-            $this->setError($this->getOption('error:maxlength'));
-            return false;
-        }
-        
-        return true;
-    }
-    
-    /**
-     * Validate the value of the control against a regex pattern.
-     * 
-     * @return boolean
-     */
-    protected function validatePattern()
-    {
-        $pattern = $this->getAttr('pattern');
-        if ($pattern && !preg_match('/' . str_replace('/', '\/', $pattern) . '/', $this->getValue())) {
-            $this->setError($this->getOption('error:pattern'));
-            return false;
-        }
-        
-        return true;
-    }
-    
-    /**
-     * Match value against another control.
-     * 
-     * @return boolean
-     */
-    protected function validateMatch()
-    {
-        $other = $this->getAttr('match');
-        if (!$other) return true;
-        
-        if (!$other instanceof Control) $other = $this->getForm()->getControl($other);
-        
-        if ($this->getValue() != $other->getValue()) {
-            $this->setError($this->getOption('error:match'));
-            return false;
-        }
-        
-        return true;
-    }
     
     /**
      * Get the error message (after validation).
@@ -260,71 +169,242 @@ abstract class Control extends Element
      */
     protected function setError($error)
     {
-        $this->error = preg_replace_callback('/{(?:(.*)|)?(@|%|\$)(.+?)(?:|(.*))?}/', array($this, 'setErrorPlaceholder'), $error);
-    }
-    
-    /**
-     * Callback for setError method.
-     * 
-     * @param array $match
-     * @return string
-     */
-    protected function setErrorPlaceholder($match)
-    {
-        if ($match[2] == '@') {
-            $val = $this->getAttr($match[3]);
-        } elseif ($match[2] == '%') {
-            $val = $this->getOption($match[3]);
-        } elseif ($match[2] == '$') {
-            switch ($match[3]) {
-                case 'value': $val = (string)$this->getValue(); break;
-                case 'length': $val = strlen($this->getValue()); break;
-                case 'desc': $val = $this->desc; break;
-                default: trigger_error("Unknown variable '{$match[2]}' in error messge.", E_USER_WARNING); return null;
-            }
-        }
-        
-        if ($val === null || $val === '') return null;
-        
-        return $match[1] . $val . (isset($match[4]) ? $match[4] : '');
+        $this->error = trim($this->parse($error));
     }
     
     
     /**
-     * Render the input control to HTML.
+     * Get the label as HTML
      * 
-     * @param string $html  HTML of the control
      * @return string
      */
-    protected function renderContainer($html)
+    final public function getLabel()
     {
-        $this->getId();
+        return $this->renderLabel($this->getAttr(), $this->getOptions());
+    }
 
+    /**
+     * Get the element as HTML
+     * 
+     * @return string
+     */
+    final public function getControl()
+    {
+        return $this->renderControl($this->getAttr(), $this->getOptions());
+    }
+
+    /**
+     * Get the inner HTML
+     * 
+     * @return string
+     */
+    final public function getField()
+    {
+        return $this->renderField($this->getAttr(), $this->getOptions());
+    }
+
+    
+    /**
+     * Render the element
+     * 
+     * @return string
+     */
+    public function render()
+    {
+        $attr = $this->getAttr();
         $options = $this->getOptions();
-        $error = $this->getError();
         
-        // Build <label>
-        if ($options['label'] === 'inside') {
-            $html = "<label class=\"" . $this->getAttr('type') . "\">\n"
-                . $html . "\n"
-                . $this->getDescription() . ($this->getAttr('required') ? $options['required-suffix'] : '') . "\n"
-                . "</label>";
-        } elseif ($options['label']) {
-            $html = "<label for=\"" . $this->getId() . "\">"
-                . $this->getDescription() . ($this->getAttr('required') ? $options['required-suffix'] : '')
-                . "</label>\n"
-                . $html;
+        $innerHtml = $this->renderField($attr, $options);
+        $this->renderContainer($innerHtml, $attr, $options);
+    }
+    
+    /**
+     * Render + decorate the label
+     * 
+     * @param array $attr
+     * @param array $options
+     * @return string
+     */
+    final protected function renderLabel($attr, $options)
+    {
+        $html = $this->generateLabel($options, $attr);
+        
+        foreach ($this->getDecorators() as $decorator) {
+            $html = $decorator->renderLabel($this, $html, $attr, $options);
         }
+        
+        return $html;
+    }
+    
+    /**
+     * Render + decorate the element
+     * 
+     * @param array $attr
+     * @param array $options
+     * @return string
+     */
+    final protected function renderControl($attr, $options)
+    {
+        $html = $this->generateControl($options, $attr);
+        
+        foreach ($this->getDecorators() as $decorator) {
+            $html = $decorator->renderControl($this, $html, $attr, $options);
+        }
+        
+        return $html;
+    }
+    
+    /**
+     * Render + decorate the element to inner HTML
+     * 
+     * @param array $attr
+     * @param array $options
+     * @return string
+     */
+    final protected function renderField($attr, $options)
+    {
+        $html = $this->generateField($options, $attr);
+        
+        foreach ($this->getDecorators() as $decorator) {
+            $html = $decorator->renderField($this, $html, $attr, $options);
+        }
+        
+        return $html;
+    }
+    
+    /**
+     * Render + decorate the container
+     * 
+     * @param string $innerHtml  HTML of the element
+     * @param array  $attr
+     * @param array  $options
+     * @return string
+     */
+    final protected function renderContainer($innerHtml, $attr, $options)
+    {
+        $html = $this->generateContainer($innerHtml, $options, $attr);
+        
+        foreach ($this->getDecorators() as $decorator) {
+            $html = $decorator->renderContainer($this, $innerHtml, $html, $attr, $options);
+        }
+        
+        return $html;
+    }
+    
+    
+    /**
+     * Render the label.
+     * 
+     * @param array $attr
+     * @param array $options
+     * @return string
+     */
+    protected function generateLabel($attr, $options)
+    {
+        return "<label for=\"" . $this->getId() . "\">"
+            . $this->getDescription()
+            . (!empty($attr['required']) ? $options['required-suffix'] : '') . "\n"
+            . "</label>\n";
+    }
+    
+    /**
+     * Render the element control to HTML.
+     * 
+     * @param array $attr
+     * @param array $options
+     * @return string
+     */
+    abstract protected function generateControl($attr, $options);
+
+    /**
+     * Render the element field to HTML.
+     * 
+     * @param array $attr
+     * @param array $options
+     * @return string
+     */
+    protected function generateField($attr, $options)
+    {
+        $html = $this->renderControl($attr, $options);
+        
+        if (!empty($options['prepend'])) {
+            $html = $this->parse($options['prepend']) . ' ' . $html;
+        }
+        
+        if (!empty($options['append'])) {
+            $html = $html . ' ' . $this->parse($options['append']);
+        }
+
+        if (isset($options['label']) && $options['label'] === 'contain') {
+            $html = "<label>\n"
+                . $html . "\n"
+                . $this->getDescription()
+                . (!empty($attr['required']) ? $options['required-suffix'] : '') . "\n"
+                . "</label>";
+        }
+        
+        $script = $this->getValidationScript();
+        if ($script) $html .= "\n" . $script;
+        
+        return $html;
+    }
+
+    /**
+     * Render the container.
+     * 
+     * @param string $innerHtml  HTML of the element
+     * @param array  $attr
+     * @param array  $options
+     * @return string
+     */
+    protected function generateContainer($innerHtml, $attr, $options)
+    {
+        $html = $innerHtml;
+
+        $label = $this->renderLabel($attr, $options);
+        if ($label) $html = $label . "\n" . $html;
         
         // Add error
+        $error = $this->getError();
         if ($error) $html .= "\n<span class=\"error\">{$error}</span>";
         
         // Put everything in a container
         if ($options['container']) {
             $id = $this->getId() . "-container";
-            $html = "<div id=\"$id\" class=\"control-container\"" . ($error ? " error" : '') . ">\n{$html}\n</div>";
+            $html = "<div id=\"$id\">\n{$html}\n</div>";
         }
         
         return $html;
+    }
+    
+
+    /**
+     * Get a value for a placeholder
+     * 
+     * @param string $var
+     * @return string
+     */
+    protected function resolvePlaceholder($var)
+    {
+        // preg_replace callback
+        if (is_array($var)) {
+            $var = $var[1];
+        }
+        
+        switch ($var) {
+            case 'value':
+                $var = (string)$this->getValue();
+                break;
+
+            case 'length':
+                $var = strlen($this->getValue());
+                break;
+
+            case 'desc':
+                $var = $this->getDescription();
+                break;
+        }
+        
+        return parent::resolvePlaceholder($var);
     }
 }

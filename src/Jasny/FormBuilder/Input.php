@@ -68,14 +68,15 @@ class Input extends Control
 
     
     /**
-     * Get all HTML attributes.
+     * Get an HTML attribute(s).
+     * All attributes will be cased to their string representation.
      * 
-     * @param boolean $cast  Cast to a string
-     * @return array
+     * @param string  $attr  Attribute name, omit to get all attributes
+     * @return mixed
      */
-    public function getAttrs($cast=true)
+    public function getAttr($attr = null)
     {
-        $attrs = parent::getAttrs($cast);
+        $attrs = parent::getAttr($cast);
         $type = $attrs['type'];
         
         if ($this->getDescription()) {
@@ -125,7 +126,7 @@ class Input extends Control
      * 
      * @return boolean
      */
-    public function isValid()
+    protected function validate()
     {
         if (!$this->validateRequired()) return false;
         
@@ -141,75 +142,35 @@ class Input extends Control
         
         return true;
     }
+    
 
     /**
-     * Validate if value matches the input type.
+     * Render the element field to HTML.
      * 
-     * @return boolean
+     * @param array $attr
+     * @param array $options
+     * @return string
      */
-    protected function validateType()
+    protected function generateField($attr, $options)
     {
-        $value = $this->getValue();
-        $type = $this->getAttr('type');
+        $html = parent::generateField($attr, $options);
         
-        switch ($type) {
-            case 'color':
-                if (preg_match('/^#\d{3}(\d{3})?|rgb(\d{1,3},\d{1,3},\d{1,3});?$/', $value)) return true;
-                break;
-            case 'number':
-                if (ctype_digit((string)$value)) return true;
-                break;
-            case 'range':
-                if (is_numeric($value)) return true;
-                break;
-            case 'date':
-            case 'datetime':
-            case 'datetime-local':
-                try {
-                    if (!$value instanceof \DateTime) new \DateTime((string)$value);
-                    return true;
-                } catch (Exception $e) {}
-                break;
-            case 'time':
-                if (preg_match('/^\d\d?:\d\d?(:\d\d?)?$/', $value)) return true;
-                break;
-            case 'month':
-                if (preg_match('/^\d\d(\d\d)?-\d\d$/', $value)) return true;
-                break;
-            case 'week':
-                if (preg_match('/^\d\d?:\d\d?(:\d\d?)?$/', $value)) return true;
-                break;
-            case 'url':
-                if (preg_match('/^\w+:/', $value)) return true;
-                break;
-            case 'email':
-                if (preg_match('/^[\w\-\.]+@[\w\-\.]+$/', $value)) return true;
-                break;
-            default:
-                return true;
+        // Determine default options and attributes
+        if ($this->getAttr('type') == 'checkbox' && $this->getOption('add-hidden')) {
+            $name = htmlentities($this->getAttr('name'));
+            $html = '<input type="hidden" name="' . $name . '" value="">' . "\n" . $html;
         }
         
-        $this->setError($this->getOption('error:type'));
-        return false;
+        return $html;
     }
-    
+
     /**
      * Render the <input>.
      * 
      * @return string
      */
-    protected function render()
+    protected function generateControl()
     {
-        // Determine default options and attributes
-        $type = $this->getAttr('type');
-        
-        // Render the input
-        $html = "<input" . $this->renderAttrs() . ">";
-        
-        if ($type == 'checkbox' || $type == 'radio') {
-            $html = "<input type=\"hidden\" name=\"" . htmlentities($this->getAttr('name')) . "\" value=\"\">\n$html";
-        }
-        
-        return $this->renderContainer($html);
+        return "<input " . $this->attr . ">";
     }
 }

@@ -4,6 +4,9 @@ namespace Jasny\FormBuilder;
 
 /**
  * Representation of a <select> element in a Bootstrap form.
+ * 
+ * Options
+ *  - selected-first  Put the selected option(s) on top of the list
  */
 class Select extends ChoiceControl
 {
@@ -12,7 +15,7 @@ class Select extends ChoiceControl
      * 
      * @return string
      */
-    protected function render()
+    protected function generateControl()
     {
         $selected_first = (boolean)$this->getOption('selected-first');
         

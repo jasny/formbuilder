@@ -73,9 +73,8 @@ class Textarea extends Control
      * 
      * @return string
      */
-    protected function render()
+    protected function generateControl()
     {
-        $html = "<textarea" . $this->renderAttrs() . ">" . $this->getValue() . "</textarea>";
-        return $this->renderContainer($html);
+        return "<textarea" . $this->renderAttrs() . ">" . $this->getValue() . "</textarea>";
     }
 }

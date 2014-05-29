@@ -5,7 +5,7 @@ namespace Jasny\FormBuilder\Bootstrap;
 /**
  * Representation of a Jasny Bootstrap file upload widget.
  */
-class Imageupload extends Fileupload
+class Imageinput extends Fileinput
 {
     /**
      * Create base64 encoded image to embed in HTML 
@@ -55,18 +55,18 @@ class Imageupload extends Fileupload
         $button_remove = htmlentities($options['buttons']['remove']);
 
         if (isset($options['holder'])) {
-            $thumbnail = '<div class="fileupload-new thumbnail">' . $options['holder'] . '</div>' . "\n"
-                . '<div class="fileupload-exists fileupload-preview thumbnail">' . $image . '</div>';
+            $thumbnail = '<div class="fileinput-new thumbnail">' . $options['holder'] . '</div>' . "\n"
+                . '<div class="fileinput-exists fileinput-preview thumbnail">' . $image . '</div>';
         } else {
-            $thumbnail = '<div class="fileupload-preview thumbnail">' . $image . '</div>';
+            $thumbnail = '<div class="fileinput-preview thumbnail">' . $image . '</div>';
         }
         
         $html = <<<HTML
-<div{$attr_html} data-provides="fileupload">
+<div{$attr_html} data-provides="fileinput">
   $thumbnail
   <div>
-    <span class="btn btn-file"><span class="fileupload-new">$button_select</span><span class="fileupload-exists">$button_change</span><input type="file" name="$name"/></span>
-    <button class="btn fileupload-exists" data-dismiss="fileupload">$button_remove</button>
+    <span class="btn btn-file"><span class="fileinput-new">$button_select</span><span class="fileinput-exists">$button_change</span><input type="file" name="$name"/></span>
+    <button class="btn fileinput-exists" data-dismiss="fileinput">$button_remove</button>
   </div>
 </div>
 HTML;

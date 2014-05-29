@@ -1,15 +1,16 @@
 <?php
 
 namespace Jasny\FormBuilder\Bootstrap;
+
 use Jasny\FormBuilder as Base;
 
 /**
  * Representation of a Jasny Bootstrap file upload widget.
+ * 
+ * @link http://jasny.github.io/bootstrap/javascript/#fileinput
  */
-class Fileupload extends Base\Control
+class Fileinput extends Base\Control
 {
-    use Base\Bootstrap;
-    
     static public $buttons = array(
         'select' => "Select file",
         'change' => "Change",
@@ -35,6 +36,7 @@ class Fileupload extends Base\Control
         if (!isset($options['buttons'])) $options['buttons'] = self::$buttons;
         
         parent::__construct($name, $description, $attrs, $options);
+        $this->addClass(['fileupload', 'fileupload-new']);
     }
     
     
@@ -52,7 +54,7 @@ class Fileupload extends Base\Control
      * Set the value of the control.
      * 
      * @param string $value
-     * @return Boostrap/Control $this
+     * @return Fileinput $this
      */
     public function setValue($value)
     {
@@ -68,6 +70,13 @@ class Fileupload extends Base\Control
         if (is_array($value) && $value['error'] == UPLOAD_ERR_NO_FILE) return;
         
         $this->value = $value;
+        
+        if (!$this->value || (is_array($value) && $value['error'])) {
+            $this->removeClass('fileupload-exists')->addClass('fileupload-new');
+        } else {
+            $this->removeClass('fileupload-new')->addClass('fileupload-exists');
+        }
+        
         return $this;
     }
     
@@ -92,15 +101,19 @@ class Fileupload extends Base\Control
     }
     
     /**
-     * Return the name of the control.
+     * Set the name of the element.
      * 
-     * @return string
+     * @param string $name
+     * @return Element $this
      */
-    public function getName()
+    public function setName($name)
     {
-        return preg_replace('/\[\]$/', '', $this->getAttr('name'));
+        if ($this->getAttr('multiple') && substr($name, -2) != '[]') {
+            $name .= '[]';
+        }
+        
+        return $this->setAttr('name', $name);
     }
-    
     
     /**
      * Move (or clear) uploaded file.
@@ -131,50 +144,16 @@ class Fileupload extends Base\Control
         return $destination;
     }
     
-    
-    /**
-     * Get all HTML attributes.
-     * 
-     * @param boolean $cast  Cast to a string
-     * @return array
-     */
-    public function getAttrs($cast=true)
-    {
-        $attrs = parent::getAttrs($cast);
-        $attrs['class'] = (empty($attrs['class']) ? '' : $attrs['class'] . ' ')
-            . 'fileupload fileupload-' . ($this->value ? 'exists' : 'new');
-
-        return $attrs;
-    }
-    
-    
     /**
      * Validate the select control.
      * 
      * @return boolean
      */
-    public function isValid()
+    public function validate()
     {
-        if (!$this->validateRequired()) return false;
-        if (!$this->validateUpload()) return false;
-
-        return true;
-    }
-
-    /**
-     * Check if there ware upload errors.
-     * 
-     * @return boolean
-     */
-    protected function validateUpload()
-    {
-        // No error
-        if (!is_array($this->value) || !$this->value['error']) return true;
-        
-        // An error
-        $errors = $this->getOption('error:upload');
-        $this->setError($errors[$this->value['error']]);
-        return false;
+        return
+            $this->validateRequired() &&
+            $this->validateUpload();
     }
     
     
@@ -183,7 +162,7 @@ class Fileupload extends Base\Control
      * 
      * @return string
      */
-    protected function render()
+    protected function generateControl()
     {
         $options = $this->getOptions();
         
@@ -198,21 +177,60 @@ class Fileupload extends Base\Control
             $value = htmlentities(basename($this->value));
         }
         
-        $name = htmlentities($this->getAttr('name'));
-        $attr_html = $this->renderAttrs(['name'=>null]);
+        $attr_html = $this->attr->render(['name'=>null, 'multiple'=>null]);
 
-        $button_select = htmlentities($options['buttons']['select']);
-        $button_change = htmlentities($options['buttons']['change']);
-        $button_remove = htmlentities($options['buttons']['remove']);
+        $preview = $this->generatePreview($value, $options);
+        $button_select = $this->generateSelectButton($options);
+        $button_remove = $this->generateRemoveButton($options);
         
         $html = <<<HTML
 <div{$attr_html} data-provides="fileupload">
-  <div class="input-append">
-    <div class="uneditable-input span3"><i class="icon-file fileupload-exists"></i> <span class="fileupload-preview">$value</span></div><span class="btn btn-file"><span class="fileupload-new">$button_select</span><span class="fileupload-exists">$button_change</span><input type="file" name="$name" /></span><button class="btn fileupload-exists" data-dismiss="fileupload">$button_remove</button>
+  {$hidden}<div class="input-append">
+    <div class="uneditable-input span3">{$preview}</div>{$button_select}{$button_remove}
   </div>
 </div>
 HTML;
         
         return $html;
+    }
+    
+    protected function generatePreview($value, $options)
+    {
+        return <<<HTML
+<i class="icon-file fileupload-exists"></i> <span class="fileupload-preview">$value</span>
+HTML;
+    }
+    
+    /**
+     * Render the select button
+     * 
+     * @param array $options
+     * @return string
+     */
+    protected function generateSelectButton($options)
+    {
+        $attr = $this->attr->renderOnly(['name', 'multiple']);
+        
+        $button_select = htmlentities($options['buttons']['select']);
+        $button_change = htmlentities($options['buttons']['change']);
+        
+        return <<<HTML
+<span class="btn btn-file"><span class="fileupload-new">$button_select</span><span class="fileupload-exists">$button_change</span><input type="file" $attr /></span> 
+HTML;
+    }
+    
+    /**
+     * Render the remove button
+     * 
+     * @param array $options
+     * @return string
+     */
+    protected function generateRemoveButton($options)
+    {
+        $button_remove = htmlentities($options['buttons']['remove']);
+        
+        return <<<HTML
+<button class="btn fileupload-exists" data-dismiss="fileupload">$button_remove</button>
+HTML;
     }
 }
