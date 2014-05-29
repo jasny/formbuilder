@@ -11,9 +11,9 @@ class FormBuilder
      * Default options
      * @var array
      */
-    static public $options = [
+    public static $options = [
         'render' => true,              // Render element
-        'validation' => true,          // Server-side validation enabled
+        'basic-validation' => true,    // Server-side validation
         'validation-script' => true,   // Include <script> for validation that isn't supported by HTML5
         'add-hidden' => true,          // Add hidden input for checkbox inputs
         'required-suffix' => ' *',     // Suffix label for required controls
@@ -41,7 +41,7 @@ class FormBuilder
      * Named element types
      * @var array
      */
-    static public $elements = [
+    public static $elements = [
         'form' => ['Jasny\FormBuilder\Form'],
         'fieldset' => ['Jasny\FormBuilder\Fieldset'],
         'link' => ['Jasny\FormBuilder\Link'],
@@ -68,30 +68,61 @@ class FormBuilder
     ];
 
     /**
-     * Named element types, used by the build() method
+     * Named decorators
      * @var array
      */
-    static public $decorators = [
-        'tidy' => ['Jasny\FormBuilder\Tidy'],
-        'bootstrap' => ['Jasny\FormBuilder\Bootstrap\Decorator']
+    public static $decorators = [
+        'tidy' => 'Jasny\FormBuilder\Tidy',
+        'bootstrap' => 'Jasny\FormBuilder\Bootstrap\Decorator'
     ];
     
     
     /**
-     * Create a form element
+     * General factory method
      * 
-     * @param string $element
-     * @param Additional arguments are passed to the constructor
-     * @return FormBuilder\Element
+     * @param string $type       'node' or 'decorator'
+     * @param array  $arguments  Arguments passes to the factory method
+     * @return FormBuilder\Element|FormBuilder\Decorator
      */
-    public static function element($element)
+    public static function build($type, $arguments)
     {
-        if (!isset(self::$elements[$element])) throw new \Exception("Unable to build a $element.");
+        return call_user_func_array([get_called_class(), $type], $arguments);
+    }
+    
+    
+    /**
+     * Create a form node
+     * 
+     * @param string $name
+     * @param mixed  $...   Additional arguments are passed to the constructor
+     * @return FormBuilder\Node
+     */
+    public static function node($name)
+    {
+        if (!isset(self::$elements[$name])) throw new \Exception("Unable to build a $name node.");
         
-        $defaults = self::$elements[$element];
+        $defaults = self::$elements[$name];
         
         $class = array_shift($defaults);
         $args = self::mergeArguments($defaults, array_slice(func_get_args(), 1));
+        
+        $refl = new \ReflectionClass($class);
+        return $refl->newInstanceArgs($args);
+    }
+    
+    /**
+     * Create a form decorator
+     * 
+     * @param string $name
+     * @param mixed  $...   Additional arguments are passed to the constructor
+     * @return FormBuilder\Decorator
+     */
+    public static function decorator($name)
+    {
+        if (!isset(self::$elements[$name])) throw new \Exception("Unable to build a $name decorator.");
+        
+        $class = self::$elements[$name];
+        $args = array_slice(func_get_args(), 1);
         
         $refl = new \ReflectionClass($class);
         return $refl->newInstanceArgs($args);
@@ -110,23 +141,15 @@ class FormBuilder
         for ($i=0; $i < count($defaults); $i++) {
             if (!isset($args[$i])) {
                 $args[$i] = $defaults[$i];
-            } elseif (self::isPair($args[$i]) && self::isPair($defaults[$i])) {
-                $is_object = is_object($args[$i]);
-                $args[$i] = array_merge($defaults, $args[$i]);
-                
-                if ($is_object) $args[$i] = (object)$args[$i];
+            } elseif (is_array($defaults[$i]) || $defaults[$i] instanceof \stdClass) {
+                if (is_array($args[$i])) {
+                    $args[$i] = array_merge((array)$defaults[$i], $args[$i]);
+                } elseif ($args[$i] instanceof \stdClass) {
+                    $args[$i] = (object)array_merge((array)$defaults[$i], (array)$args[$i]);
+                }
             }
         }
-    }
-    
-    /**
-     * Check if variable is an array or object
-     * 
-     * @param mixed $var
-     * @return boolean
-     */
-    protected static function isPair($var)
-    {
-        return is_array($var) || $var instanceof stdClass;
+        
+        return $args;
     }
 }

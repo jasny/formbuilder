@@ -128,11 +128,14 @@ class Input extends Control
      */
     protected function validate()
     {
-        if (!$this->validateRequired()) return false;
+        if (!$this->getOption('basic-validation')) return true;
         
+        if (!$this->validateRequired()) return false;
+
         // Empty and not required, means no further validation
         if ($this->getValue() === null || $this->getValue() === '') return true;
 
+        if ($this->getAttr('type') === 'file' && !$this->validateUpload()) return false;
         if (!$this->validateType()) return false;
         if (!$this->validateMinMax()) return false;
         if (!$this->validateLength()) return false;
@@ -171,6 +174,11 @@ class Input extends Control
      */
     protected function generateControl()
     {
-        return "<input " . $this->attr . ">";
+        if (!isset($this->attr->placeholder) && !$this->getOption('label')) {
+            $extra['placeholder'] = $this->getDescription();
+        }
+        
+        $attr = $this->attr->render($extra);
+        return "<input $attr>";
     }
 }

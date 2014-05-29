@@ -50,6 +50,19 @@ abstract class Decorator
     
     
     /**
+     * Check if element or group is valid.
+     * 
+     * @param Node    $node
+     * @param boolean $valid
+     * @return boolean
+     */
+    public function isValid($node, $valid)
+    {
+        return $valid;
+    }
+    
+    
+    /**
      * Render to HTML
      * 
      * @param Node   $node
@@ -66,15 +79,26 @@ abstract class Decorator
      * 
      * @param Element $element
      * @param string  $html     Original rendered html
-     * @param array   $attr
-     * @param array   $options
      * @return string
      */
-    public function renderLabel($element, $html, $attr, $options)
+    public function renderLabel($element, $html)
     {
         return $html;
     }
     
+    /**
+     * Render the element field to HTML.
+     * 
+     * @param Element $element
+     * @param string  $html     Original rendered html
+     * @param string  $control  HTML of the control
+     * @return string
+     */
+    public function renderField($element, $html, $control)
+    {
+        return $html;
+    }
+
     /**
      * Render the element control to HTML.
      * 
@@ -88,28 +112,15 @@ abstract class Decorator
     }
     
     /**
-     * Render the element field to HTML.
-     * 
-     * @param Element $element
-     * @param string  $html     Original rendered html
-     * @return string
-     */
-    public function renderField($element, $html)
-    {
-        return $html;
-    }
-
-    /**
      * Render the element container to HTML.
      * 
      * @param Element $element
-     * @param string  $html       Original rendered html
-     * @param string  $innerHtml
-     * @param array   $attr
-     * @param array   $options
+     * @param string  $html     Original rendered html
+     * @param string  $label    HTML of the label
+     * @param string  $control  HTML of the control
      * @return string
      */
-    public function renderContainer($element, $html, $innerHtml, $attr, $options)
+    public function renderContainer($element, $html, $label, $control)
     {
         return $html;
     }

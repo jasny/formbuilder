@@ -73,7 +73,7 @@ class Link extends Element
      * 
      * @return boolean
      */
-    public function isValid()
+    public function validation()
     {
         return true;
     }

@@ -34,29 +34,16 @@ class Textarea extends Control
         return $this;
     }
     
-    
-    /**
-     * Get all HTML attributes.
-     * 
-     * @param boolean $cast  Cast to a string
-     * @return array
-     */
-    public function getAttrs($cast=true)
-    {
-        $attr = parent::getAttrs($cast);
-        if (!isset($attr['placeholder']) && !$this->getOption('label')) $attr['placeholder'] = $this->getDescription();
-        
-        return $attr;
-    }
-    
 
     /**
      * Validate the textarea control.
      * 
      * @return boolean
      */
-    public function isValid()
+    public function validate()
     {
+        if (!$this->getOption('basic-validation')) return true;
+        
         if (!$this->validateRequired()) return false;
         
         // Empty and not required, means no further validation
@@ -75,6 +62,11 @@ class Textarea extends Control
      */
     protected function generateControl()
     {
-        return "<textarea" . $this->renderAttrs() . ">" . $this->getValue() . "</textarea>";
+        if (!isset($this->attr->placeholder) && !$this->getOption('label')) {
+            $extra['placeholder'] = $this->getDescription();
+        }
+        
+        $attr = $this->attr->render($extra);
+        return "<textarea $attr>" . $this->getValue() . "</textarea>";
     }
 }

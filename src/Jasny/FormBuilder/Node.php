@@ -1,6 +1,7 @@
 <?php
 
 namespace Jasny\FormBuilder;
+
 use Jasny\FormBuilder;
 
 /**
@@ -13,6 +14,12 @@ abstract class Node
      * @var Decorator[]
      */
     protected $decorators = [];
+    
+    /**
+     * Disabled decorators
+     * @var array
+     */
+    protected $disabledDecorators = [];
     
     /**
      * Parent element
@@ -71,17 +78,9 @@ abstract class Node
      * @param Decorator|string $decorator  Decorator object or name
      * @return Node  $this
      */
-    public function removeDecorator($decorator)
+    public function disableDecorator($decorator)
     {
-        if (is_string($decorator)) $class = FormBuilder::$decorators[$decorator][0];
-        
-        foreach ($this->decorators as $i => $cur) {
-            if (isset($class) ? is_a($cur, $class) : $cur === $decorator) {
-                unset($this->decorators[$i]);
-            }
-        }
-        
-        return $this;
+        $this->disabledDecorators[] = $decorator;
     }
     
     /**
@@ -91,12 +90,25 @@ abstract class Node
      */
     public function getDecorators()
     {
-        $decorators = [];
-        
+        // Get deep decorators from parent
+        $deepDecorators = [];
         if ($this->getParent()) {
-            $parent_decorators = $this->getParent()->getDecorators();
-            foreach ($parent_decorators as $decorator) {
-                if ($decorator->isDeep()) $decorators = $decorator;
+            foreach ($this->getParent()->getDecorators() as $decorator) {
+                if ($decorator->isDeep()) $deepDecorators[] = $decorator;
+            }
+        }
+        
+        // Add our decorators
+        $decorators = array_merge($deepDecorators, $this->decorators);
+        
+        // Remove disabled decorators
+        foreach ($this->disabledDecorators as $decorator) {
+            if (is_string($decorator)) $class = FormBuilder::$decorators[$decorator][0];
+        
+            foreach ($decorators as $i => $cur) {
+                if (isset($class) ? is_a($cur, $class) : $cur === $decorator) {
+                    unset($decorators[$i]);
+                }
             }
         }
         
@@ -210,7 +222,7 @@ abstract class Node
      * 
      * @param sting|array $option  Option name or array with options
      * @param mixed       $value
-     * @return Boostrap/Node $this
+     * @return Node $this
      */
     public function setOption($option, $value=null)
     {
@@ -251,7 +263,7 @@ abstract class Node
         $options = $this->options + $defaults;
 
         // Apply changes to optoins
-        foreach ($this->decorators as $decorator) {
+        foreach ($this->getDecorators() as $decorator) {
             $options = $decorator->applyToOptions($this, $options);
         }
         
@@ -268,6 +280,12 @@ abstract class Node
     {
         $valid = $this->validate();
         
+        // Apply changes to optoins
+        foreach ($this->getDecorators() as $decorator) {
+            $valid = $decorator->isValid($this, $valid);
+        }
+        
+        return $valid;
     }
 
     /**
@@ -290,7 +308,7 @@ abstract class Node
      * 
      * @return string
      */
-    public function __toString()
+    final public function toHTML()
     {
         $html = $this->render();
         
@@ -299,6 +317,16 @@ abstract class Node
         }
         
         return $html;
+    }
+    
+    /**
+     * Render the element to HTML.
+     * 
+     * @return string
+     */
+    final public function __toString()
+    {
+        return $this->toHTML();
     }
     
     
@@ -334,15 +362,13 @@ abstract class Node
     protected function resolvePlaceholder($var)
     {
         // preg_replace callback
-        if (is_array($var)) {
-            $var = $var[1];
-        }
+        if (is_array($var)) $var = $var[1];
         
         $value = $this->getOption($var);
         if (!isset($value)) $value = $this->getAttr($var);
         
         if ($value instanceof Element) return $value->getValue();
         if ($value instanceof \DateTime) return strftime('%x', $value->getTimestamp());
-        return $value = (string)$value;
+        return (string)$value;
     }
 }

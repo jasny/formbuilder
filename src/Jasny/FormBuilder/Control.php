@@ -4,10 +4,6 @@ namespace Jasny\FormBuilder;
 
 /**
  * Base class of form control elements.
- * 
- * @internal The generate* functions generate the HTML of the control.
- * @internal The render* functions apply decoration to the generated HTML.
- * @internal The get* functions are the public methods to get a subcomponent.
  */
 abstract class Control extends Node implements Element
 {
@@ -174,172 +170,131 @@ abstract class Control extends Node implements Element
     
     
     /**
-     * Get the label as HTML
+     * Get the <label> component.
      * 
      * @return string
      */
-    final public function getLabel()
+    final protected function getLabel()
     {
-        return $this->renderLabel($this->getAttr(), $this->getOptions());
-    }
-
-    /**
-     * Get the element as HTML
-     * 
-     * @return string
-     */
-    final public function getControl()
-    {
-        return $this->renderControl($this->getAttr(), $this->getOptions());
-    }
-
-    /**
-     * Get the inner HTML
-     * 
-     * @return string
-     */
-    final public function getField()
-    {
-        return $this->renderField($this->getAttr(), $this->getOptions());
-    }
-
-    
-    /**
-     * Render the element
-     * 
-     * @return string
-     */
-    public function render()
-    {
-        $attr = $this->getAttr();
-        $options = $this->getOptions();
+        $opt = $this->getOption('label');
+        if ($opt === false || $opt === 'inside') return null;
         
-        $innerHtml = $this->renderField($attr, $options);
-        $this->renderContainer($innerHtml, $attr, $options);
-    }
-    
-    /**
-     * Render + decorate the label
-     * 
-     * @param array $attr
-     * @param array $options
-     * @return string
-     */
-    final protected function renderLabel($attr, $options)
-    {
-        $html = $this->generateLabel($options, $attr);
+        $html = $this->renderLabel();
         
         foreach ($this->getDecorators() as $decorator) {
-            $html = $decorator->renderLabel($this, $html, $attr, $options);
+            $html = $decorator->renderLabel($this, $html);
         }
         
         return $html;
     }
     
     /**
-     * Render + decorate the element
+     * Render the control including layout elements.
      * 
-     * @param array $attr
-     * @param array $options
      * @return string
      */
-    final protected function renderControl($attr, $options)
+    final protected function getField()
     {
-        $html = $this->generateControl($options, $attr);
+        $control = $this->getControl();
+        $html = $this->renderField($control);
         
         foreach ($this->getDecorators() as $decorator) {
-            $html = $decorator->renderControl($this, $html, $attr, $options);
+            $html = $decorator->renderField($this, $html, $control);
         }
         
         return $html;
     }
     
     /**
-     * Render + decorate the element to inner HTML
+     * Get the input control.
      * 
-     * @param array $attr
-     * @param array $options
      * @return string
      */
-    final protected function renderField($attr, $options)
+    final protected function getControl()
     {
-        $html = $this->generateField($options, $attr);
+        $html = $this->renderControl();
         
         foreach ($this->getDecorators() as $decorator) {
-            $html = $decorator->renderField($this, $html, $attr, $options);
+            $html = $decorator->renderControl($this, $html);
+        }
+        
+        return $html;
+    }
+    
+    
+    /**
+     * Render the element to HTML
+     * 
+     * @return string
+     */
+    final protected function render()
+    {
+        $label = $this->getLabel();
+        $field = $this->getField();
+        $html = $this->renderContainer($field);
+        
+        foreach ($this->getDecorators() as $decorator) {
+            $html = $decorator->renderContainer($this, $html, $label, $field);
         }
         
         return $html;
     }
     
     /**
-     * Render + decorate the container
+     * Render the container.
      * 
-     * @param string $innerHtml  HTML of the element
-     * @param array  $attr
-     * @param array  $options
+     * @param string $label  HTML of the label
+     * @param string $field  HTML of the field
      * @return string
      */
-    final protected function renderContainer($innerHtml, $attr, $options)
+    protected function renderContainer($label, $field)
     {
-        $html = $this->generateContainer($innerHtml, $options, $attr);
+        $html = ($label ? $label . "\n" : '') . $field;
         
-        foreach ($this->getDecorators() as $decorator) {
-            $html = $decorator->renderContainer($this, $innerHtml, $html, $attr, $options);
-        }
+        // Add error
+        $error = $this->getError();
+        if ($error) $html .= "\n<span class=\"error\">{$error}</span>";
+        
+        // Put everything in a container
+        if ($this->getOption('container')) $html = "<div>\n{$html}\n</div>";
         
         return $html;
     }
-    
     
     /**
      * Render the label.
      * 
-     * @param array $attr
-     * @param array $options
      * @return string
      */
-    protected function generateLabel($attr, $options)
+    protected function renderLabel()
     {
-        return "<label for=\"" . $this->getId() . "\">"
+        return '<label for="' . $this->getId() . '">'
             . $this->getDescription()
-            . (!empty($attr['required']) ? $options['required-suffix'] : '') . "\n"
-            . "</label>\n";
+            . ($this->attr('required') ? $this->option('required-suffix') : '') . "\n"
+            . '</label>' . "\n";
     }
-    
-    /**
-     * Render the element control to HTML.
-     * 
-     * @param array $attr
-     * @param array $options
-     * @return string
-     */
-    abstract protected function generateControl($attr, $options);
 
     /**
      * Render the element field to HTML.
      * 
-     * @param array $attr
-     * @param array $options
      * @return string
      */
-    protected function generateField($attr, $options)
+    protected function renderField($control)
     {
-        $html = $this->renderControl($attr, $options);
+        $html = $control;
         
-        if (!empty($options['prepend'])) {
-            $html = $this->parse($options['prepend']) . ' ' . $html;
-        }
+        $prepend = $this->getOption('prepend');
+        if ($prepend) $html = $prepend . ' ' . $html;
         
-        if (!empty($options['append'])) {
-            $html = $html . ' ' . $this->parse($options['append']);
-        }
+        $append = $this->getOption('append');
+        if ($append) $html = $html . ' ' . $append;
 
-        if (isset($options['label']) && $options['label'] === 'contain') {
+        $label = $this->getOption('label');
+        if ($label === 'contain') {
             $html = "<label>\n"
                 . $html . "\n"
                 . $this->getDescription()
-                . (!empty($attr['required']) ? $options['required-suffix'] : '') . "\n"
+                . ($this->getAttr('required') ? $this->getOption('required-suffix') : '') . "\n"
                 . "</label>";
         }
         
@@ -348,36 +303,15 @@ abstract class Control extends Node implements Element
         
         return $html;
     }
-
+    
     /**
-     * Render the container.
+     * Render the element control to HTML.
      * 
-     * @param string $innerHtml  HTML of the element
-     * @param array  $attr
-     * @param array  $options
      * @return string
      */
-    protected function generateContainer($innerHtml, $attr, $options)
-    {
-        $html = $innerHtml;
-
-        $label = $this->renderLabel($attr, $options);
-        if ($label) $html = $label . "\n" . $html;
-        
-        // Add error
-        $error = $this->getError();
-        if ($error) $html .= "\n<span class=\"error\">{$error}</span>";
-        
-        // Put everything in a container
-        if ($options['container']) {
-            $id = $this->getId() . "-container";
-            $html = "<div id=\"$id\">\n{$html}\n</div>";
-        }
-        
-        return $html;
-    }
+    abstract protected function renderControl();
     
-
+    
     /**
      * Get a value for a placeholder
      * 
@@ -387,9 +321,7 @@ abstract class Control extends Node implements Element
     protected function resolvePlaceholder($var)
     {
         // preg_replace callback
-        if (is_array($var)) {
-            $var = $var[1];
-        }
+        if (is_array($var)) $var = $var[1];
         
         switch ($var) {
             case 'value':

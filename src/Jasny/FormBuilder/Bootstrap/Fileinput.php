@@ -151,6 +151,8 @@ class Fileinput extends Base\Control
      */
     public function validate()
     {
+        if (!$this->getOption('basic-validation')) return true;
+        
         return
             $this->validateRequired() &&
             $this->validateUpload();

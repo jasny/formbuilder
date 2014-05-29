@@ -2,12 +2,14 @@
 
 namespace Jasny\FormBuilder\Bootstrap;
 
-use Jasny\FormBuilder as Base;
+use Jasny\FormBuilder\Decorator as Base;
 
 /**
  * Render element for use with Bootstrap
+ * 
+ * @todo Add classes for horizontal forms
  */
-class Decorator extends Base\Decorator
+class Decorator extends Base
 {
     /**
      * Class constructor
@@ -29,6 +31,24 @@ class Decorator extends Base\Decorator
         return true;
     }
     
+    
+    /**
+     * Modify attributes.
+     * 
+     * @param Element $element
+     * @param array   $attr
+     * @return array
+     */
+    public function applyToAttr($element, $attr)
+    {
+        if (!isset($attr['class'])) {
+            $attr['class'] = "form-control";
+        } elseif (!in_array('form-control', explode(' ', $attr['class']))) {
+            $attr['class'] . " form-control";
+        }
+        
+        return $attr;
+    }
     
     /**
      * Modify options.
@@ -57,74 +77,39 @@ class Decorator extends Base\Decorator
      * 
      * @param Element $element
      * @param string  $html     Original rendered html
-     * @param array   $attr
-     * @param array   $options
      * @return string
      */
-    public function renderLabel($element, $html, $attr, $options)
+    public function renderLabel($element, $html)
     {
-        if (empty($options['label']) || $options['label'] === 'contain') return null;
-        
-        $class = ($options['container'] ? ' class="control-label"' : '');
+        $class = $element->getOption('container') ? ' class="control-label"' : '';
         
         return "<label{$class} for=\"" . $element->getId() . "\">"
             . $element->getDescription()
-            . (!empty($attr['required']) ? $options['required-suffix'] : '') . "\n"
+            . ($element->getAttr('required') ? $element->getOption('required-suffix') : '') . "\n"
             . "</label>\n";
     }
     
     /**
-     * Render the element control to HTML.
+     * Render the element container to HTML.
      * 
      * @param Element $element
      * @param string  $html     Original rendered html
+     * @param string  $label    HTML of the label
+     * @param string  $field    HTML of the control
      * @return string
      */
-    public function renderControl($element, $html)
+    public function renderContainer($element, $html, $label, $field)
     {
-        return $html;
-    }
-    
-    /**
-     * Render the element to inner HTML.
-     * 
-     * @param Element $element
-     * @param string  $html     Original rendered html
-     * @return string
-     */
-    public function renderInner($element, $html)
-    {
-        return $html;
-    }
-
-    /**
-     * Render the control container to HTML.
-     * 
-     * @param Element $element
-     * @param string  $html       Original rendered html
-     * @param string  $innerHtml
-     * @param array   $attr
-     * @param array   $options
-     * @return string
-     */
-    public function renderContainer($element, $html, $innerHtml, $attr, $options)
-    {
-        $html = $innerHtml;
+        $html = ($label ? $label . "\n" : '') . $field;
+        
+        // Add error
         $error = $element->getError();
+        if ($error) $html .= "\n<span class=\"help-block error\">{$error}</span>";
         
-        if ($options['container']) $html = "<div class=\"controls\">\n{$html}\n</div>";
-
-        $label = $element->renderLabel($attr, $options);
-        if ($label) $html = $label . "\n" . $html;
-
-        if ($error) $html .= "\n<div class=\"help-block\">{$error}</div>";
-        if (!empty($options['help'])) $html .= "\n<small class=\"help-block\">{$options['help-block']}</small>";
-        
-        // Build HTML
-        if ($options['container']) {
-            $html = "<div class=\"control-group" . ($error ? " error" : '') . "\">\n{$html}\n</div>";
-        } elseif ($error) {
-            $html = "<span class=\"control-group error\">\n{$html}\n</span>";
+        // Put everything in a container
+        if ($element->getOption('container')) {
+            $class = "form-group" . ($error ? " has-error" : "");
+            $html = "<div class=\"$class\">\n{$html}\n</div>";
         }
         
         return $html;

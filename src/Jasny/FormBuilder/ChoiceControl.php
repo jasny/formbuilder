@@ -108,8 +108,9 @@ abstract class ChoiceControl extends Control
      * 
      * @return boolean
      */
-    public function isValid()
+    public function validate()
     {
+        if (!$this->getOption('basic-validation')) return true;
         return $this->validateRequired();
     }
 }

@@ -155,7 +155,7 @@ abstract class Group extends Node
      * 
      * @return boolean
      */
-    public function isValid()
+    protected function validate()
     {
         $ret = true;
         

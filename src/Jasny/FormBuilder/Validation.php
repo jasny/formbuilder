@@ -3,23 +3,13 @@
 namespace Jasny\FormBuilder;
 
 /**
- * Input validation
+ * Basic input validation
+ *  - Server side equivilent of HTML5 validation.
+ *  - Process upload errors.
+ *  - Client side support for minlength and matching element values (using JavaScript).
  */
 trait Validation
 {
-    /**
-     * Return an option or an attribute as fallback.
-     * 
-     * @param string $name
-     * @return mixed
-     */
-    protected function getValidationOption($name)
-    {
-        $opt = $this->getOption($name);
-        return isset($opt) ? $opt : $this->getAttr($name);
-    }
-    
-    
     /**
      * Validate if the control has a value if it's required.
      * 
@@ -27,7 +17,7 @@ trait Validation
      */
     protected function validateRequired()
     {
-        if ($this->getValidationOption('required')) {
+        if ($this->getAttr('required')) {
             $value = $this->getValue();
             if ($value === null || $value === '') {
                 $this->error = $this->setError($this->getOption('error:required'));
@@ -45,16 +35,15 @@ trait Validation
      */
     protected function validateMinMax()
     {
-        $value = $this->getValue();
-        if ($value instanceof DateTime) $value = $value->format('c');
+        $value = $this->format($this->getValue());
         
-        $min = $this->getValidationOption('min');
+        $min = $this->getAttr('min');
         if (isset($min) && $min !== false && $value < $min) {
             $this->setError($this->getOption('error:min'));
             return false;
         }
         
-        $max = $this->getValidationOption('max');
+        $max = $this->getAttr('max');
         if (isset($max) && $max !== false && $value > $max) {
             $this->setError($this->getOption('error:max'));
             return false;
@@ -72,13 +61,13 @@ trait Validation
     {
         $value = $this->getValue();
         
-        $minlength = $this->getValidationOption('minlength');
+        $minlength = $this->getAttr('minlength') ?: $this->getAttr('data-minlength');
         if (isset($minlength) && $minlength !== false && strlen($value) > $minlength) {
             $this->setError($this->getOption('error:minlength'));
             return false;
         }
         
-        $maxlength = $this->getValidationOption('maxlength');
+        $maxlength = $this->getAttr('maxlength');
         if (isset($maxlength) && $maxlength !== false && strlen($value) > $maxlength) {
             $this->setError($this->getOption('error:maxlength'));
             return false;
@@ -94,7 +83,7 @@ trait Validation
      */
     protected function validatePattern()
     {
-        $pattern = $this->getValidationOption('pattern');
+        $pattern = $this->getAttr('pattern');
         if ($pattern && !preg_match('/' . str_replace('/', '\/', $pattern) . '/', $this->getValue())) {
             $this->setError($this->getOption('error:pattern'));
             return false;
@@ -110,7 +99,7 @@ trait Validation
      */
     protected function validateMatch()
     {
-        $other = $this->getValidationOption('match');
+        $other = $this->getOption('match');
         if (!isset($other)) return true;
         
         if (!$other instanceof Element) $other = $this->getForm()->getElement($other);
@@ -148,7 +137,7 @@ trait Validation
     protected function validateType()
     {
         $type = $this->getAttr('type');
-        $method = str_replace(' ', '', ucwords(str_replace('-', ' ', $type)));
+        $method = 'validateType' . str_replace(' ', '', ucwords(str_replace('-', ' ', $type)));
         
         if (!method_exists($this, $method) || $this->$method()) return true;
         
@@ -161,7 +150,7 @@ trait Validation
      * 
      * @return boolean
      */
-    protected function validateColor()
+    protected function validateTypeColor()
     {
         $value = $this->getValue();
         return strlen($value) === 7 && $value[0] === '#' && ctype_xdigit(substr($value, 1));
@@ -172,7 +161,7 @@ trait Validation
      * 
      * @return boolean
      */
-    protected function validateNumber()
+    protected function validateTypeNumber()
     {
         $value = $this->getValue();
         return is_int($value) || ctype_digit((string)$value);
@@ -183,7 +172,7 @@ trait Validation
      * 
      * @return boolean
      */
-    protected function validateRange()
+    protected function validateTypeRange()
     {
         return is_numeric($this->getValue());
     }
@@ -193,7 +182,7 @@ trait Validation
      * 
      * @return boolean
      */
-    protected function validateDate()
+    protected function validateTypeDate()
     {
         $res = date_parse_from_format("Y-m-d", $this->getValue());
         return $res['error_count'] === 0;
@@ -204,7 +193,7 @@ trait Validation
      * 
      * @return boolean
      */
-    protected function validateDatetime()
+    protected function validateTypeDatetime()
     {
         $res = date_parse_from_format("Y-m-d\TH:i:s", $this->getValue());
         return $res['error_count'] === 0;
@@ -215,7 +204,7 @@ trait Validation
      * 
      * @return boolean
      */
-    protected function validateDatetimeLocal()
+    protected function validateTypeDatetimeLocal()
     {
         $res = date_parse_from_format(DateTime::RFC3339, $this->getValue());
         return $res['error_count'] === 0;
@@ -226,7 +215,7 @@ trait Validation
      * 
      * @return boolean
      */
-    protected function validateTime()
+    protected function validateTypeTime()
     {
         $res = date_parse_from_format("H:i:s", $this->getValue());
         return $res['error_count'] === 0;
@@ -237,7 +226,7 @@ trait Validation
      * 
      * @return boolean
      */
-    protected function validateMonth()
+    protected function validateTypeMonth()
     {
         $res = date_parse_from_format("Y-m", $this->getValue());
         return $res['error_count'] === 0;
@@ -248,7 +237,7 @@ trait Validation
      * 
      * @return boolean
      */
-    protected function validateWeek()
+    protected function validateTypeWeek()
     {
         $res = date_parse_from_format("o-\WW", $this->getValue());
         return $res['error_count'] === 0;
@@ -259,7 +248,7 @@ trait Validation
      * 
      * @return boolean
      */
-    protected function validateUrl()
+    protected function validateTypeUrl()
     {
         $value = $this->getValue();
         $pos = strpos($value, ':');
@@ -271,7 +260,7 @@ trait Validation
      * 
      * @return boolean
      */
-    protected function validateEmail()
+    protected function validateTypeEmail()
     {
         return preg_match('/^[\w\-\.]+@[\w\-\.]+\w+$/', $this->getValue());
     }
@@ -355,10 +344,17 @@ SCRIPT;
      */
     protected function getValidationScriptMinlength()
     {
-        $minlength = $this->getValidationOption('minlength');
-        if ((int)$minlength === 0) return null;
+        $attr = 'minlength';
+        $minlength = $this->getAttr('minlength');
         
-        return 'this.value.length >= ' . (int)$minlength;
+        if (!$minlength) {
+            $attr = 'data-minlength';
+            $minlength = $this->getAttr('data-minlength');
+        }
+        
+        if (!isset($minlength)) return null;
+        
+        return 'this.value.length >= this.getAttribute("' . $attr . '")';
     }
     
     /**
@@ -368,7 +364,7 @@ SCRIPT;
      */
     protected function getValidationScriptMatch()
     {
-        $other = $this->getValidationOption('match');
+        $other = $this->getOption('match');
         if (!$other) return null;
         
         if (!$other instanceof Element) $other = $this->getForm()->getElement($other);
