@@ -24,7 +24,7 @@ class Input extends Control
             if (!isset($attr['value'])) $attr['value'] = function() {
                 return $this->getDescription();
             };
-        } elseif ($attr['type'] == 'checkbox' && $attr['type'] == 'radio' && $attr['type'] !== 'file') {
+        } elseif ($attr['type'] !== 'checkbox' && $attr['type'] !== 'radio' && $attr['type'] !== 'file') {
             if (!isset($attr['placeholder'])) $attr['placeholder'] = function() {
                 return $this->getOption('label') ? null : $this->getDescription();
             };

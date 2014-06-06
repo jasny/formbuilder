@@ -16,7 +16,7 @@ class Attr extends \ArrayIterator
     protected function cast($value)
     {
         if ($value instanceof Element) $value = $value->getValue();
-        if ($value instanceof \Closure) return $value();
+        if ($value instanceof \Closure) $value = $value();
         
         if ($value instanceof \DateTime) return $value->format('c');
         if (is_object($value) && method_exists($value, '__toString')) return (string)$value;
@@ -97,7 +97,7 @@ class Attr extends \ArrayIterator
         
         $attrs = $this->getArrayCopy();
         
-        foreach ($attrs as $key=>$value) {
+        foreach ($attrs as $key=>&$value) {
             $value = $this->cast($value);
             if (!isset($value)) unset($attrs[$key]);
         }
