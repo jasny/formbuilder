@@ -17,8 +17,24 @@ abstract class Group extends Node
      * Child nodes of the group.
      * @var array
      */
-    protected $children = array();
+    protected $children = [];
 
+    
+    /**
+     * Apply modifications by decorator
+     * 
+     * @param Decorator $decorator
+     */
+    protected function applyDecorator(Decorator $decorator)
+    {
+        parent::applyDecorator($decorator);
+        
+        if ($decorator->isDeep()) {
+            foreach ($this->children as $child) {
+                if ($child instanceof Node) $child->applyDecorator($decorator);
+            }
+        }
+    }
     
     /**
      * Add an child to the group.
@@ -33,6 +49,10 @@ abstract class Group extends Node
         }
         
         if ($child instanceof Node) $child->parent = $this;
+        
+        foreach ($this->getDecorators() as $decorator) {
+            if ($decorator->isDeep()) $child->applyDecorator($decorator);
+        }
         
         $this->children[] = $child;
         return $this;

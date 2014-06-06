@@ -31,7 +31,7 @@ abstract class Node
      * HTML attributes
      * @var Attr
      */
-    protected $attr = [];
+    public $attr = [];
     
     /**
      * Node options 
@@ -43,12 +43,12 @@ abstract class Node
     /**
      * Class constructor.
      * 
-     * @param array|Attr $attr     HTML attributes
-     * @param array      $options  Node options
+     * @param array $attr     HTML attributes
+     * @param array $options  Node options
      */
     public function __construct($attr=[], array $options=[])
     {
-        $this->attr = new Attr($this->attr, $attr);
+        $this->attr = new Attr(array_merge($this->attr, $attr));
         $this->options = array_merge($this->options, $options);
     }
     
@@ -69,7 +69,18 @@ abstract class Node
         $decorator->connect($this);
         $this->decorators[] = $decorator;
         
+        $this->applyDecorator($decorator);
         return $this;
+    }
+
+    /**
+     * Apply modifications by decorator
+     * 
+     * @param Decorator $decorator
+     */
+    protected function applyDecorator(Decorator $decorator)
+    {
+        $decorator->apply($this);
     }
     
     /**
@@ -144,9 +155,9 @@ abstract class Node
      * @param mixed        $value
      * @return Node $this
      */
-    public function setAttr($attr, $value=null)
+    final public function setAttr($attr, $value=null)
     {
-        $this->attrs->set($attr, $value);
+        $this->attr->set($attr, $value);
         return $this;
     }
     
@@ -157,63 +168,62 @@ abstract class Node
      * @param string  $attr  Attribute name, omit to get all attributes
      * @return mixed
      */
-    public function getAttr($attr = null)
+    final public function getAttr($attr = null)
     {
-        return $this->attrs->get($attr);
+        return $this->attr->get($attr);
     }
     
     
     /**
-     * Add a CSS class
-     * 
-     * @param string|array $class   Multiple classes may be specified as array or using a space
-     * @return Node $this
-     */
-    public function addClass($class)
-    {
-        if (empty($this->attr->class)) {
-            $this->attr->class = is_array($class) ? join(' ', $class) : $class;
-        } else {
-            $classes = is_array($class) ? $class : explode(' ', $class);
-            
-            foreach ($classes as $class) {
-                if (!$this->hasClass($class)) {
-                    $this->attr->class .= ' ' . $class;
-                }
-            }
-        }
-        
-        return $this;
-    }
-    
-    /**
-     * Remove a CSS class
-     * 
-     * @param string|array $class   Multiple classes may be specified as array or using a space
-     * @return Node $this
-     */
-    public function removeClass($class)
-    {
-        if (!empty($this->attr->class)) {
-            $current = explode(" ", $this->attr->class);
-            $remove = explode(" ", $class);
-
-            $this->attr->class = join(' ', array_diff($current, $remove));
-        }
-        
-        return $this;
-    }
-    
-    /**
-     * Check if element has a specific CSS class
+     * Check if class is present
      * 
      * @param string $class
      * @return boolean
      */
     public function hasClass($class)
     {
-        $current = explode(" ", $this->attr->class);
-        return in_array($class, $current);
+        return isset($this->attr['class']) && in_array($class, explode(' ', $this->attr['class']));
+    }
+    
+    /**
+     * Add a class
+     * 
+     * @param string|array $class  Multiple classes may be specified as array or using a space
+     * @return Node $this
+     */
+    public function addClass($class)
+    {
+        $attr = $this->attr['class'];
+        
+        if (!isset($this->attr['class'])) {
+            $this->attr['class'] = is_array($class) ? join(' ', $class) : $class;
+        } else {
+            $classes = is_array($class) ? $class : explode(' ', $class);
+            
+            foreach ($classes as $class) {
+                if (!$this->hasClass($class)) $attr .= ' ' . $class;
+            }
+        }
+        
+        return $attr;
+    }
+    
+    /**
+     * Remove a class
+     * 
+     * @param string|array $class  Multiple classes may be specified as array or using a space
+     * @return Node $this
+     */
+    public function removeClass($class)
+    {
+        if (isset($this->attr['class'])) {
+            $current = explode(" ", $this->attr['class']);
+            $remove = explode(" ", $class);
+
+            $attribute = join(' ', array_diff($current, $remove));
+        }
+        
+        return $attribute;
     }
     
     
@@ -228,8 +238,11 @@ abstract class Node
     {
         if (is_array($option)) {
             foreach ($option as $key=>$value) {
-                if (!isset($value)) unset($this->options[$key]);
-                 else $this->options[$key] = $value;
+                if (!isset($value)) {
+                    unset($this->options[$key]);
+                } else {
+                    $this->options[$key] = $value;
+                }
             }
         } elseif (!isset($value)) {
             unset($this->options[$option]);
@@ -259,7 +272,7 @@ abstract class Node
      */
     public function getOptions()
     {
-        $defaults = isset($this->parent) ? $this->parent->getOptions() : self::$defaults;
+        $defaults = isset($this->parent) ? $this->parent->getOptions() : FormBuilder::$options;
         $options = $this->options + $defaults;
 
         // Apply changes to optoins
@@ -331,18 +344,6 @@ abstract class Node
     
     
     /**
-     * Factory method
-     * 
-     * @param string $element
-     */
-    public function build($element, array $args=[])
-    {
-        if ($this->parent) return $this->parent->build($element, $args);
-        return FormBuilder::element($element, $args);
-    }
-    
-    
-    /**
      * Parse a message, inserting values for placeholders.
      * 
      * @param string $message
@@ -370,5 +371,19 @@ abstract class Node
         if ($value instanceof Element) return $value->getValue();
         if ($value instanceof \DateTime) return strftime('%x', $value->getTimestamp());
         return (string)$value;
+    }
+
+    
+    /**
+     * Factory method
+     * 
+     * @param string $element
+     */
+    protected function build($element, array $args=[])
+    {
+        if ($this->parent) return $this->parent->build($element, $args);
+        
+        array_unshift($args, $element);
+        return FormBuilder::build('node', $args);
     }
 }

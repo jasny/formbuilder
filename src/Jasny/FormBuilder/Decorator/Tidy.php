@@ -2,6 +2,8 @@
 
 namespace Jasny\FormBuilder;
 
+use Jasny\FormBuilder\Decorator;
+
 /**
  * Tidy up the HTML.
  * @link http://www.php.net/tidy

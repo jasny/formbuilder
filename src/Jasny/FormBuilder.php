@@ -45,6 +45,7 @@ class FormBuilder
         'form' => ['Jasny\FormBuilder\Form'],
         'fieldset' => ['Jasny\FormBuilder\Fieldset'],
         'link' => ['Jasny\FormBuilder\Link'],
+        'button' => ['Jasny\FormBuilder\Button'],
         
         'choice' => ['Jasny\FormBuilder\Choice'],
         'input' => ['Jasny\FormBuilder\Input'],
@@ -72,8 +73,8 @@ class FormBuilder
      * @var array
      */
     public static $decorators = [
-        'tidy' => 'Jasny\FormBuilder\Tidy',
-        'bootstrap' => 'Jasny\FormBuilder\Bootstrap\Decorator'
+        'tidy' => 'Jasny\FormBuilder\Decorator\Tidy',
+        'bootstrap' => 'Jasny\FormBuilder\Decorator\Bootstrap'
     ];
     
     
@@ -102,12 +103,24 @@ class FormBuilder
         if (!isset(self::$elements[$name])) throw new \Exception("Unable to build a $name node.");
         
         $defaults = self::$elements[$name];
-        
+
         $class = array_shift($defaults);
         $args = self::mergeArguments($defaults, array_slice(func_get_args(), 1));
         
         $refl = new \ReflectionClass($class);
         return $refl->newInstanceArgs($args);
+    }
+    
+    /**
+     * Alias of FormBuilder::node()
+     * 
+     * @param string $name
+     * @param mixed  $...   Additional arguments are passed to the constructor
+     * @return FormBuilder\Node
+     */
+    final public static function element($name)
+    {
+        return static::build('node', func_get_args());
     }
     
     /**
@@ -119,9 +132,9 @@ class FormBuilder
      */
     public static function decorator($name)
     {
-        if (!isset(self::$elements[$name])) throw new \Exception("Unable to build a $name decorator.");
+        if (!isset(self::$decorators[$name])) throw new \Exception("Unable to build a $name decorator.");
         
-        $class = self::$elements[$name];
+        $class = self::$decorators[$name];
         $args = array_slice(func_get_args(), 1);
         
         $refl = new \ReflectionClass($class);

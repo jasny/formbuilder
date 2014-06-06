@@ -21,7 +21,7 @@ class Form extends Group
      */
     public function __construct(array $attrs=array(), array $options=array())
     {
-        $attrs += ['method'=>'POST', 'action'=>isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : null];
+        $attrs += ['method'=>'post'];
         parent::__construct($attrs, $options);
     }
     

@@ -27,15 +27,15 @@ abstract class Control extends Node implements Element
      * 
      * @param array $name
      * @param array $description  Description as displayed on the label 
-     * @param array $attrs        HTML attributes
+     * @param array $attr         HTML attributes
      * @param array $options      Node options
      */
-    public function __construct($name=null, $description=null, array $attrs=[], array $options=[])
+    public function __construct($name=null, $description=null, array $attr=[], array $options=[])
     {
-        if (isset($name)) $attrs = compact('name') + $attrs;
+        if (isset($name)) $attr = compact('name') + $attr;
         $this->setDescription($description ?: ucfirst(str_replace('_', ' ', $name)));
         
-        parent::__construct($attrs, $options);
+        parent::__construct($attr, $options);
     }
     
     
@@ -163,7 +163,7 @@ abstract class Control extends Node implements Element
      * @param string $error  The error message
      * @return string
      */
-    protected function setError($error)
+    public function setError($error)
     {
         $this->error = trim($this->parse($error));
     }
@@ -174,7 +174,7 @@ abstract class Control extends Node implements Element
      * 
      * @return string
      */
-    final protected function getLabel()
+    final public function getLabel()
     {
         $opt = $this->getOption('label');
         if ($opt === false || $opt === 'inside') return null;
@@ -193,7 +193,7 @@ abstract class Control extends Node implements Element
      * 
      * @return string
      */
-    final protected function getField()
+    final public function getField()
     {
         $control = $this->getControl();
         $html = $this->renderField($control);
@@ -210,7 +210,7 @@ abstract class Control extends Node implements Element
      * 
      * @return string
      */
-    final protected function getControl()
+    final public function getControl()
     {
         $html = $this->renderControl();
         
@@ -227,11 +227,11 @@ abstract class Control extends Node implements Element
      * 
      * @return string
      */
-    final protected function render()
+    final public function render()
     {
         $label = $this->getLabel();
         $field = $this->getField();
-        $html = $this->renderContainer($field);
+        $html = $this->renderContainer($label, $field);
         
         foreach ($this->getDecorators() as $decorator) {
             $html = $decorator->renderContainer($this, $html, $label, $field);
@@ -270,13 +270,14 @@ abstract class Control extends Node implements Element
     {
         return '<label for="' . $this->getId() . '">'
             . $this->getDescription()
-            . ($this->attr('required') ? $this->option('required-suffix') : '') . "\n"
-            . '</label>' . "\n";
+            . ($this->getAttr('required') ? $this->option('required-suffix') : '')
+            . '</label>';
     }
 
     /**
      * Render the element field to HTML.
      * 
+     * @param string $control  Control HTML
      * @return string
      */
     protected function renderField($control)

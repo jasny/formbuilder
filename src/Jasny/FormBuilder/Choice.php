@@ -11,25 +11,11 @@ namespace Jasny\FormBuilder;
 class Choice extends ChoiceControl
 {
     /**
-     * Get all HTML attributes.
-     * 
-     * @param boolean $cast  Cast to a string
-     * @return array
-     */
-    public function getAttrs($cast=true)
-    {
-        $attrs = parent::getAttrs($cast);
-        $attrs['class'] = (empty($attrs['class']) ? '' : $attrs['class'] . ' ') . 'input-group';
-
-        return $attrs;
-    }
-    
-    /**
      * Render the input control to HTML.
      * 
      * @return string
      */
-    protected function generateControl()
+    protected function renderControl()
     {
         $this->getId();
         $name = $this->getAttr('name');

@@ -276,6 +276,7 @@ trait Validation
         if (!$this->getOption('validation-script')) return null;
         
         $rules = $this->getValidationScriptRules();
+        if (empty($rules)) return null;
         
         foreach ($this->getDecorators() as $decorator) {
             if ($decorator->applyToValidationScript($this, $rules));
@@ -292,16 +293,10 @@ trait Validation
      */
     protected function getValidationScriptRules()
     {
-        $tests = ['minlength', 'match'];
-        $rules = [];
+        $rules['minlength'] = $this->getValidationScriptMinlength();
+        $rules['match'] = $this->getValidationScriptMatch();
         
-        foreach ($tests as $test) {
-            $method = 'getValidationScript' . str_replace(' ', '', ucwords(str_replace('-', ' ', $type)));
-            $rule = $this->$method();
-            if ($rule) $rules[$test] = $rule;
-        }
-        
-        return $rules;
+        return array_filter($rules);
     }
     
     /**

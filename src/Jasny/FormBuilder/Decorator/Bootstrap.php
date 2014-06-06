@@ -1,15 +1,19 @@
 <?php
 
-namespace Jasny\FormBuilder\Bootstrap;
+namespace Jasny\FormBuilder\Decorator;
 
-use Jasny\FormBuilder\Decorator as Base;
+use Jasny\FormBuilder\Decorator;
+use Jasny\FormBuilder\Node;
+use Jasny\FormBuilder\Element;
+use Jasny\FormBuilder\Button;
+use Jasny\FormBuilder\Input;
 
 /**
  * Render element for use with Bootstrap
  * 
  * @todo Add classes for horizontal forms
  */
-class Decorator extends Base
+class Bootstrap extends Decorator
 {
     /**
      * Class constructor
@@ -33,28 +37,24 @@ class Decorator extends Base
     
     
     /**
-     * Modify attributes.
+     * Apply default modifications.
      * 
-     * @param Element $element
-     * @param array   $attr
-     * @return array
+     * @param Node $node
      */
-    public function applyToAttr($element, $attr)
+    public function apply($node)
     {
-        if (!isset($attr['class'])) {
-            $attr['class'] = "form-control";
-        } elseif (!in_array('form-control', explode(' ', $attr['class']))) {
-            $attr['class'] . " form-control";
-        }
+        if ($node instanceof Element) $node->addClass('form-control');
         
-        return $attr;
+        $isButton = $node instanceof Button ||
+            ($node instanceof Input && in_array($node->attr['type'], ['button', 'submit', 'reset']));
+        if ($isButton && !$node->hasClass('btn')) $node->addClass('btn btn-default');
     }
     
     /**
      * Modify options.
      * 
-     * @param Element $element
-     * @param array   $options
+     * @param Node  $element
+     * @param array $options
      * @return array
      */
     public function applyToOptions($element, $options)
@@ -103,7 +103,7 @@ class Decorator extends Base
         $html = ($label ? $label . "\n" : '') . $field;
         
         // Add error
-        $error = $element->getError();
+        $error = $element instanceof Element ? $element->getError() : null;
         if ($error) $html .= "\n<span class=\"help-block error\">{$error}</span>";
         
         // Put everything in a container

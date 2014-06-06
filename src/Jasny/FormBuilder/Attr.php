@@ -5,20 +5,26 @@ namespace Jasny\FormBuilder;
 /**
  * HTML attributes
  */
-class Attr
+class Attr extends \ArrayIterator
 {
     /**
-     * Class constructor
+     * Cast the value of an attribute to a string.
      * 
-     * @param array $attr
-     * @param Additional arrays may be passed
+     * @param mixed  $value
+     * @return string
      */
-    public function __construct($attr)
+    protected function cast($value)
     {
-        foreach (func_get_args() as $attr) {
-            $this->set($attr);
-        }
+        if ($value instanceof Element) $value = $value->getValue();
+        if ($value instanceof \Closure) return $value();
+        
+        if ($value instanceof \DateTime) return $value->format('c');
+        if (is_object($value) && method_exists($value, '__toString')) return (string)$value;
+        if (!is_scalar($value)) return json_encode($value);
+        
+        return $value;
     }
+    
     
     /**
      * Set HTML attribute(s).
@@ -30,36 +36,16 @@ class Attr
     public function set($attr, $value=null)
     {
         $attrs = is_string($attr) ? [$attr => $value] : $attr;
-        
-        foreach ($attrs as $key => $value) {
-            $this->$key = $value;
+        foreach ($attrs as $key=>$value) {
+            if (isset($value)) {
+                $this->offsetSet($key, $value);
+            } else {
+                $this->offsetUnset($key);
+            }
         }
         
         return $this;
     }
-    
-    
-    /**
-     * Cast the value of an attribute to a string.
-     * 
-     * @param string $attr    Attribute name
-     * @param mixed  $value
-     * @return string
-     */
-    protected function cast($attr, $value)
-    {
-        if ($value instanceof Element) $value = $value->getValue();
-
-        if ($value === null || $value === false) return null;
-        if ($value === true) return $attr;
-        
-        if ($value instanceof \DateTime) return $value->format('c');
-        if (is_object($value) && method_exists($value, '__toString')) return (string)$value;
-        if (!is_scalar($value)) return json_encode($value);
-        
-        return $value;
-    }
-    
     
     /**
      * Get an HTML attribute(s).
@@ -74,26 +60,45 @@ class Attr
     }
     
     /**
-     * Get a specific HTML attribute (casted).
+     * Get an HTML attribute(s) without casting them.
      * 
-     * @return array
+     * @param string  $attr  Attribute name, omit to get all attributes
+     * @return mixed
      */
-    protected function getOne($attr)
+    final public function getRaw($attr=null)
     {
-        return isset($this->$attr) ? $this->castAttr($attr, $this->$attr) : null;
+        return isset($attr) ? $this->getOne($attr, true) : $this->getAll(true);
     }
     
     /**
-     * Get all HTML attributes (casted).
+     * Get a specific HTML attribute.
      * 
+     * @param string  $attr
+     * @param boolean $raw   Don't cast attribute
      * @return array
      */
-    protected function getAll()
+    protected function getOne($attr, $raw=false)
     {
-        $attrs = get_object_vars($this);
+        if (!$this->offsetExists($attr)) return null;
         
-        foreach ($attrs as $key=>&$value) {
-            $value = $this->castAttr($key, $value);
+        $value = parent::offsetGet($attr);
+        return $raw ? $value : $this->cast($value);
+    }
+    
+    /**
+     * Get all HTML attributes.
+     * 
+     * @param boolean $raw   Don't cast attributes
+     * @return array
+     */
+    protected function getAll($raw=false)
+    {
+        if ($raw) return $this->getArrayCopy();
+        
+        $attrs = $this->getArrayCopy();
+        
+        foreach ($attrs as $key=>$value) {
+            $value = $this->cast($value);
             if (!isset($value)) unset($attrs[$key]);
         }
 
@@ -109,7 +114,11 @@ class Attr
      */
     public function render(array $override=[])
     {
-        $attrs = $this->getAll() + $override;
+        foreach ($override as &$value) {
+            $value = $this->cast($value);
+        }
+        
+        $attrs = $override + $this->getAll();
         
         $pairs = [];
         foreach ($attrs as $key=>$value) {
@@ -147,8 +156,31 @@ class Attr
      * 
      * @return string
      */
-    public function __toString()
+    final public function __toString()
     {
         return $this->render();
+    }
+    
+    
+    /**
+     * Array access get
+     * 
+     * @param string $offset
+     * @return string
+     */
+    final public function offsetGet($offset)
+    {
+        return $this->getOne($offset);
+    }
+
+    /**
+     * Append a value.
+     * 
+     * @param mixed $value
+     * @throws \Exception
+     */
+    final public function append($value)
+    {
+        throw new \Exception("Unable to add value '$value'. You need to use associated keys.");
     }
 }

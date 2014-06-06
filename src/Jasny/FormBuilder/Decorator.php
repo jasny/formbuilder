@@ -13,37 +13,34 @@ abstract class Decorator
      * @return boolean
      */
     abstract public function isDeep();
-
+    
+    
     /**
      * Called when decorator is added to element
      * 
-     * @param Element $element
+     * @param Node $node
      */
-    public function connect($element)
+    public function connect($node)
     {
     }
 
-    
     /**
-     * Modify attributes.
+     * Apply default modifications.
      * 
-     * @param Element $element
-     * @param array   $attr
-     * @return array
+     * @param Node $node
      */
-    public function applyToAttr($element, $attr)
+    public function apply($node)
     {
-        return $attr;
     }
     
     /**
      * Modify options.
      * 
-     * @param Element $element
-     * @param array   $options
+     * @param Node  $node
+     * @param array $options
      * @return array
      */
-    public function applyToOptions($element, $options)
+    public function applyToOptions($node, $options)
     {
         return $options;
     }
@@ -102,8 +99,8 @@ abstract class Decorator
     /**
      * Render the element control to HTML.
      * 
-     * @param Element $element
-     * @param string  $html     Original rendered html
+     * @param Element|Button $element
+     * @param string         $html     Original rendered html
      * @return string
      */
     public function renderControl($element, $html)
@@ -114,10 +111,10 @@ abstract class Decorator
     /**
      * Render the element container to HTML.
      * 
-     * @param Element $element
-     * @param string  $html     Original rendered html
-     * @param string  $label    HTML of the label
-     * @param string  $control  HTML of the control
+     * @param Element|Button $element
+     * @param string         $html     Original rendered html
+     * @param string         $label    HTML of the label
+     * @param string         $control  HTML of the control
      * @return string
      */
     public function renderContainer($element, $html, $label, $control)

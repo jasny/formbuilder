@@ -12,15 +12,25 @@ class Input extends Control
      * 
      * @param array $name
      * @param array $description  Description as displayed on the label 
-     * @param array $attrs        HTML attributes
+     * @param array $attr         HTML attributes
      * @param array $options      Element options
      */
-    public function __construct($name=null, $description=null, array $attrs=[], array $options=[])
+    public function __construct($name=null, $description=null, array $attr=[], array $options=[])
     {
-        if (!isset($attrs['type'])) $attrs['type'] = 'text';
-        if ($attrs['type'] == 'checkbox' && !isset($attrs['value'])) $attrs['value'] = 1;
+        if (!isset($attr['type'])) $attr['type'] = 'text';
+        if ($attr['type'] === 'checkbox' && !isset($attr['value'])) $attr['value'] = 1;
         
-        parent::__construct($name, $description, $attrs, $options);
+        if ($attr['type'] === 'button' || $attr['type'] === 'submit' || $attr['type'] === 'reset') {
+            if (!isset($attr['value'])) $attr['value'] = function() {
+                return $this->getDescription();
+            };
+        } elseif ($attr['type'] == 'checkbox' && $attr['type'] == 'radio' && $attr['type'] !== 'file') {
+            if (!isset($attr['placeholder'])) $attr['placeholder'] = function() {
+                return $this->getOption('label') ? null : $this->getDescription();
+            };
+        }
+        
+        parent::__construct($name, $description, $attr, $options);
     }
     
     
@@ -31,12 +41,11 @@ class Input extends Control
      */
     public function getValue()
     {
-        $value = $this->getAttr('value', false);
-        if ($value instanceof Control) $value = $value->getValue();
+        $value = $this->attr['value'];
+        if ($value instanceof Element) $value = $value->getValue();
 
-        if (($this->getAttr('type') == 'checkbox' || $this->getAttr('type') == 'radio') && !$this->getAttr('checked')) {
-            $value = false;
-        }
+        $type = $this->attr['type'];
+        if (($type === 'checkbox' || $type === 'radio') && !$this->attr->get('checked')) $value = false;
         
         return $value;
     }
@@ -49,47 +58,23 @@ class Input extends Control
      */
     public function setValue($value)
     {
-        switch ($this->getAttr('type')) {
+        switch ($this->attr['type']) {
             case 'checkbox':
                 $checked = (boolean)$value;
-                $this->setAttr('checked', $checked);
-                if ($checked) $this->setAttr('value', $value);
+                $this->attr['checked'] = $checked;
+                if ($checked) $this->attr['value'] = $value;
                 break;
             case 'radio':
                 $this->setAttr('checked', $value == $this->getAttr('value'));
                 break;
             default:
-                $this->setAttr('value', $value);
+                $this->attr['value'] = $value;
                 break;
         }
         
         return $this;
     }
 
-    
-    /**
-     * Get an HTML attribute(s).
-     * All attributes will be cased to their string representation.
-     * 
-     * @param string  $attr  Attribute name, omit to get all attributes
-     * @return mixed
-     */
-    public function getAttr($attr = null)
-    {
-        $attrs = parent::getAttr($cast);
-        $type = $attrs['type'];
-        
-        if ($this->getDescription()) {
-            if (!isset($attrs['value']) && ($type == 'button' || $type == 'submit' || $type == 'reset')) {
-                $attrs['value'] = $this->getDescription();
-            } elseif (!isset($attrs['placeholder']) && !$this->getOption('label')) {
-                $attrs['placeholder'] = $this->getDescription();
-            }
-        }
-        
-        return $attrs;
-    }
-    
     /**
      * Get all options.
      * 
@@ -99,7 +84,7 @@ class Input extends Control
     {
         $options = parent::getOptions();
         
-        switch ($this->attrs['type']) {
+        switch ($this->attr['type']) {
             case 'hidden':
                 if (!isset($this->options['label'])) $options['label'] = false;
                 if (!isset($this->options['container'])) $options['container'] = false;
@@ -135,7 +120,7 @@ class Input extends Control
         // Empty and not required, means no further validation
         if ($this->getValue() === null || $this->getValue() === '') return true;
 
-        if ($this->getAttr('type') === 'file' && !$this->validateUpload()) return false;
+        if ($this->attr['type'] === 'file' && !$this->validateUpload()) return false;
         if (!$this->validateType()) return false;
         if (!$this->validateMinMax()) return false;
         if (!$this->validateLength()) return false;
@@ -150,21 +135,18 @@ class Input extends Control
     /**
      * Render the element field to HTML.
      * 
-     * @param array $attr
-     * @param array $options
+     * @param string $control  Control HTML
      * @return string
      */
-    protected function generateField($attr, $options)
+    protected function renderField($control)
     {
-        $html = parent::generateField($attr, $options);
-        
         // Determine default options and attributes
-        if ($this->getAttr('type') == 'checkbox' && $this->getOption('add-hidden')) {
-            $name = htmlentities($this->getAttr('name'));
-            $html = '<input type="hidden" name="' . $name . '" value="">' . "\n" . $html;
+        if ($this->attr['type'] == 'checkbox' && $this->getOption('add-hidden')) {
+            $name = htmlentities($this->attr['name']);
+            $control = '<input type="hidden" name="' . $name . '" value="">' . $control;
         }
-        
-        return $html;
+
+        return parent::renderField($control);
     }
 
     /**
@@ -172,13 +154,8 @@ class Input extends Control
      * 
      * @return string
      */
-    protected function generateControl()
+    protected function renderControl()
     {
-        if (!isset($this->attr->placeholder) && !$this->getOption('label')) {
-            $extra['placeholder'] = $this->getDescription();
-        }
-        
-        $attr = $this->attr->render($extra);
-        return "<input $attr>";
+        return "<input {$this->attr}>";
     }
 }
