@@ -20,7 +20,9 @@ class Attr extends \ArrayIterator
         
         if ($value instanceof \DateTime) return $value->format('c');
         if (is_object($value) && method_exists($value, '__toString')) return (string)$value;
-        if (!is_scalar($value)) return json_encode($value);
+        if (is_array($value) || $value instanceof \stdClass || $value instanceof \JsonSerializable) {
+            return json_encode($value);
+        }
         
         return $value;
     }
@@ -109,7 +111,7 @@ class Attr extends \ArrayIterator
     /**
      * Get attributes as string
      * 
-     * @param array $override  Attributes to override
+     * @param array $override  Attributes to add or override
      * @return string
      */
     public function render(array $override=[])
@@ -122,10 +124,7 @@ class Attr extends \ArrayIterator
         
         $pairs = [];
         foreach ($attrs as $key=>$value) {
-            if (!isset($value) || $value === false) continue;
-            
-            $set = $value === true ? null : '="' . htmlentities($value) . '"';
-            $pairs[] = htmlentities($key) . $set;
+            static::appendAttr($pairs, $key, $this->getOne($key));
         }
         
         return join(' ', $pairs);
@@ -134,18 +133,14 @@ class Attr extends \ArrayIterator
     /**
      * Get specific attributes as string
      * 
-     * @param array $attrs
+     * @param array|string $attrs
      * @return string
      */
-    public function renderOnly(array $attrs)
+    public function renderOnly($attrs)
     {
         $pairs = [];
-        foreach ($attrs as $key) {
-            $value = $this->getOne($key);
-            if (!isset($value) || $value === false) continue;
-            
-            $set = $value === true ? null : '="' . htmlentities($value) . '"';
-            $pairs[] = htmlentities($key) . $set;
+        foreach ((array)$attrs as $key) {
+            static::appendAttr($pairs, $key, $this->getOne($key));
         }
         
         return join(' ', $pairs);
@@ -182,5 +177,21 @@ class Attr extends \ArrayIterator
     final public function append($value)
     {
         throw new \Exception("Unable to add value '$value'. You need to use associated keys.");
+    }
+    
+    
+    /**
+     * Add a key/value as HTML attribute.
+     * 
+     * @param array  $pairs
+     * @param string $key
+     * @param mixed  $value  Scalar
+     */
+    protected static function appendAttr(&$pairs, $key, $value)
+    {
+        if (!isset($value) || $value === false) return;
+
+        $set = $value === true ? null : '="' . htmlentities($value) . '"';
+        $pairs[] = htmlentities($key) . $set;
     }
 }

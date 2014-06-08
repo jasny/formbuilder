@@ -86,22 +86,28 @@ abstract class Group extends Element
     }
     
     /**
-     * Find a specific child (deep search).
+     * Find a specific child through deep search.
      * 
-     * @param string $name  FormElement name or #id
+     * @param string  $name    Element name or #id
+     * @param boolean $unlink  Unlink the found element
      * @return Element
      */
-    public function get($name)
+    protected function deepSearch($name, $unlink = false)
     {
-        if ($name[0] == '#') $id = substr($name, 1);
+        if ($name[0] == '#') {
+            $id = substr($name, 1);
+            unset($name);
+        }
         
-        foreach ($this->children as $child) {
-            if ($child instanceof FormElement) {
-                if (isset($id) ? $child->getId() == $id : $child->getName() == $name) {
-                    $found = $child;
-                }
+        foreach ($this->children as $i=>$child) {
+            if (isset($id) && $child->getId() === $id) {
+                $found = $child;
+                if ($unlink) unset($this->children[$i]);
+            } elseif (isset($name) && $child instanceof FormElement && $child->getName() == $name) {
+                $found = $child;
+                if ($unlink) unset($this->children[$i]);
             } elseif ($child instanceof Group) {
-                $found = $child->getElement($name);
+                $found = $child->deepSearch($name);
             }
             
             if (isset($found)) return $found;
@@ -111,9 +117,20 @@ abstract class Group extends Element
     }
     
     /**
+     * Get a specific child (deep search).
+     * 
+     * @param string  $name    Element name or #id
+     * @return Element
+     */
+    protected function get($name)
+    {
+        return $this->deepSearch($name);
+    }
+    
+    /**
      * Get all the form elements in the group (deep search).
      * 
-     * @return array
+     * @return FormElement[]
      */
     public function getElements()
     {
@@ -133,6 +150,18 @@ abstract class Group extends Element
         }
         
         return $elements;
+    }
+    
+    /**
+     * Remove a specific child (deep search)
+     * 
+     * @param string $name  Element name or #id
+     * @return Group $this
+     */
+    public function remove($name)
+    {
+        $this->deepSearch($name, true);
+        return $this;
     }
     
     

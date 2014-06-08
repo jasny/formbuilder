@@ -17,15 +17,19 @@ class Input extends Control
      */
     public function __construct($name=null, $description=null, array $attr=[], array $options=[])
     {
-        if (!isset($attr['type'])) $attr['type'] = 'text';
-        if ($attr['type'] === 'checkbox' && !isset($attr['value'])) $attr['value'] = 1;
+        $attr += $this->attr + ['type'=>'text'];
         
-        if ($attr['type'] === 'button' || $attr['type'] === 'submit' || $attr['type'] === 'reset') {
-            if (!isset($attr['value'])) $attr['value'] = function() {
+        if ($attr['type'] === 'checkbox' && !isset($attr['value'])) $attr['value'] = 1;
+
+        if (in_array($attr['type'], ['button', 'submit', 'reset']) && !isset($attr['value'])) {
+            $attr['value'] = function() {
                 return $this->getDescription();
             };
-        } elseif ($attr['type'] !== 'checkbox' && $attr['type'] !== 'radio' && $attr['type'] !== 'file') {
-            if (!isset($attr['placeholder'])) $attr['placeholder'] = function() {
+        }
+        
+        $noPlaceholder = ['hidden', 'button', 'submit', 'reset', 'checkbox', 'radio', 'file'];
+        if (!in_array($attr['type'], $noPlaceholder) && !isset($attr['placeholder'])) {
+            $attr['placeholder'] = function() {
                 return $this->getOption('label') ? null : $this->getDescription();
             };
         }

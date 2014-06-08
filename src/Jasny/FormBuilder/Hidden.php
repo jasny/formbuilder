@@ -8,12 +8,6 @@ namespace Jasny\FormBuilder;
 class Hidden extends Input
 {
     /**
-     * HTML attributes
-     * @var Attr
-     */
-    public $attr = ['type' => 'hidden'];
-    
-    /**
      * Class constructor.
      * 
      * @param array $name
@@ -22,6 +16,7 @@ class Hidden extends Input
      */
     public function __construct($name=null, array $attr=[], array $options=[])
     {
+        $attr += ['type' => 'hidden'];
         parent::__construct($name, null, $attr, $options);
     }
 }

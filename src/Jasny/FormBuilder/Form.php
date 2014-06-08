@@ -13,11 +13,12 @@ class Form extends Group
      */
     protected $tagname = 'form';
 
+    
     /**
      * Class constructor.
      * 
      * @param array $attrs    HTML attributes
-     * @param array $options  FormElement options
+     * @param array $options  Element options
      */
     public function __construct(array $attrs=array(), array $options=array())
     {
@@ -25,19 +26,19 @@ class Form extends Group
         parent::__construct($attrs, $options);
     }
     
+    
     /**
      * Get unique identifier
      */
     public function getId()
     {
-        $id = $this->getAttr('id');
-        if ($id) return $id;
+        if (!isset($this->attr['id'])) {
+            $this->attr['id'] = isset($this->attr['name']) ?
+                $this->attr['name'] . '-form' :
+                base_convert(uniqid(), 16, 36);
+        }
         
-        $name = $this->getAttr('name');
-        $id = $name ? $name . '-form' : base_convert(uniqid(), 16, 36);
-        
-        $this->setAttr('id', $id);
-        return $id;
+        return $this->attr['id'];
     }
     
     /**

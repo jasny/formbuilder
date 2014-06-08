@@ -48,7 +48,7 @@ abstract class Element
      */
     public function __construct($attr=[], array $options=[])
     {
-        $this->attr = new Attr(array_merge($this->attr, $attr));
+        $this->attr = new Attr((array)$attr + $this->attr);
         $this->options = array_merge($this->options, $options);
     }
     
