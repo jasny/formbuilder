@@ -4,26 +4,25 @@ namespace Jasny\FormBuilder;
 
 /**
  * Representation of an HTML <fieldset>.
+ * 
+ * @option legend  <legend> of the fieldset
  */
 class Fieldset extends Group
 {
     /**
-     * <legend> of the fieldset
      * @var string
      */
-    protected $legend;
+    protected $tagname = 'fieldset';
     
     /**
      * Class constructor.
      * 
-     * @param string $legend 
+     * @param array  $options  Element options
      * @param array  $attr     HTML attributes
-     * @param array  $options  FormElement options
      */
-    public function __construct($legend=null, array $attr=[], array $options=[])
+    public function __construct(array $options=[], array $attr=[])
     {
-        if (isset($legend)) $this->legend = $legend;
-        parent::__construct('fieldset', $attr, $options);
+        parent::__construct($options, $attr);
     }
     
     /**

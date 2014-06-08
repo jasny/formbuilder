@@ -119,12 +119,14 @@ trait Validation
      */
     protected function validateUpload()
     {
+        $value = $this->getValue();
+        
         // No error
-        if (!is_array($this->value) || !$this->value['error']) return true;
+        if (!is_array($value) || empty($value['error'])) return true;
         
         // An error
         $errors = $this->getOption('error:upload');
-        $this->setError($errors[$this->value['error']]);
+        $this->setError($errors[$value['error']]);
         return false;
     }
     
@@ -136,7 +138,7 @@ trait Validation
      */
     protected function validateType()
     {
-        $type = $this->getAttr('type');
+        $type = $this->attr['type'];
         $method = 'validateType' . str_replace(' ', '', ucwords(str_replace('-', ' ', $type)));
         
         if (!method_exists($this, $method) || $this->$method()) return true;

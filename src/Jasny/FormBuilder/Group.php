@@ -2,6 +2,8 @@
 
 namespace Jasny\FormBuilder;
 
+use Jasny\FormBuilder;
+
 /**
  * Base class for an HTML child with children.
  */
@@ -18,21 +20,7 @@ abstract class Group extends Element
      * @var array
      */
     protected $children = [];
-
     
-    /**
-     * Class constructor.
-     * 
-     * @param string $name
-     * @param string $legend 
-     * @param array  $attr     HTML attributes
-     * @param array  $options  FormElement options
-     */
-    public function __construct($tagname, array $attr=[], array $options=[])
-    {
-        $this->tagname = $tagname;
-        parent::__construct($attr, $options);
-    }
     
     /**
      * Apply modifications by decorator
@@ -50,17 +38,33 @@ abstract class Group extends Element
         }
     }
     
+    
+    /**
+     * Factory method
+     * 
+     * @param string $element
+     * @param array  $options  Element options
+     * @param array  $attr     HTML attributes
+     * @return FormBuilder\Element|FormBuilder\FormElement
+     */
+    protected function build($element, array $options=[], array $attr=[])
+    {
+        if ($this->parent) return $this->parent->build($element, $options, $attr);
+        return FormBuilder::element($element, $options, $attr);
+    }
+    
     /**
      * Add an child to the group.
      * 
      * @param Element|string $child
-     * @param array          $args   Arguments that are passed to the constructor
+     * @param array          $options  Element options
+     * @param array          $attr     HTML attributes
      * @return Group $this
      */
-    public function add($child, array $args=[])
+    public function add($child, array $options=[], array $attr=[])
     {
         if (is_string($child) && $child[0] !== '<') {
-            $child = $this->build($child, $args);
+            $child = $this->build($child, $options, $attr);
         }
         
         if ($child instanceof Element) $child->parent = $this;
@@ -77,13 +81,14 @@ abstract class Group extends Element
      * Add an child and return it.
      * 
      * @param Element|string $child
-     * @param array          $args   Arguments that are passed to the constructor
+     * @param array          $options  Element options
+     * @param array          $attr     HTML attributes
      * @return Element $child
      */
-    public function begin($child, array $args=[])
+    public function begin($child, array $options=[], array $attr=[])
     {
         if (is_string($child) && $child[0] !== '<') {
-            $child = $this->build($child, $args);
+            $child = $this->build($child, $options, $attr);
         }
         
         if (!$child instanceof Element) {

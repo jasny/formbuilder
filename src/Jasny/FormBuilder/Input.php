@@ -4,21 +4,34 @@ namespace Jasny\FormBuilder;
 
 /**
  * Representation of an <input> element in a form.
+ * 
+ * @option string id           Element id
+ * @option string name         Element name
+ * @option string description  Description as displayed on the label
+ * @option string type         HTML5 input type
+ * @option mixed  value        Element value
+ * 
+ * @todo Support multiple file upload
  */
 class Input extends Control
 {
     /**
+     * Upload data. Only used for <input type="file">.
+     * @var array
+     */
+    protected $upload;
+    
+    
+    /**
      * Class constructor.
      * 
-     * @param string $name
-     * @param string $description  Description as displayed on the label 
-     * @param mixed  $value
-     * @param array  $attr         HTML attributes
-     * @param array  $options      FormElement options
+     * @param array  $options  Element options
+     * @param array  $attr     HTML attributes
      */
-    public function __construct($name=null, $description=null, $value=null, array $attr=[], array $options=[])
+    public function __construct(array $options=[], array $attr=[])
     {
-        if (isset($value)) $attr['value'] = $value;
+        if (isset($options['value'])) $attr['value'] = $options['value'];
+        if (isset($options['type'])) $attr['type'] = $options['type'];
         $attr += $this->attr + ['type'=>'text'];
         
         if ($attr['type'] === 'checkbox' && !isset($attr['value'])) $attr['value'] = 1;
@@ -36,9 +49,20 @@ class Input extends Control
             };
         }
         
-        parent::__construct($name, $description, $attr, $options);
+        unset($options['type'], $options['value']);
+        parent::__construct($options, $attr);
     }
     
+    
+    /**
+     * Get HTML5 input type
+     * 
+     * @return string
+     */
+    final public function getType()
+    {
+        return $this->attr['type'];
+    }
     
     /**
      * Get the value of the control.
@@ -47,11 +71,13 @@ class Input extends Control
      */
     public function getValue()
     {
+        $type = $this->attr['type'];
+        if ($type === 'file') return $this->upload;
+        
         $value = $this->attr['value'];
         if ($value instanceof FormElement) $value = $value->getValue();
 
-        $type = $this->attr['type'];
-        if (($type === 'checkbox' || $type === 'radio') && !$this->attr->get('checked')) $value = false;
+        if (($type === 'checkbox' || $type === 'radio') && !$this->attr['checked']) $value = false;
         
         return $value;
     }
@@ -65,13 +91,15 @@ class Input extends Control
     public function setValue($value)
     {
         switch ($this->attr['type']) {
+            case 'file':
+                $this->upload = $value;
             case 'checkbox':
                 $checked = (boolean)$value;
                 $this->attr['checked'] = $checked;
-                if ($checked) $this->attr['value'] = $value;
+                if ($checked && !is_bool($value)) $this->attr['value'] = $value;
                 break;
             case 'radio':
-                $this->setAttr('checked', $value == $this->getAttr('value'));
+                $this->attr['checked'] = ($value == $this->attr['value']);
                 break;
             default:
                 $this->attr['value'] = $value;

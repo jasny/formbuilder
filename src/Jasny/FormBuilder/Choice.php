@@ -28,8 +28,12 @@ class Choice extends ChoiceControl
         $inputs = $inputs_first = [];
         
         foreach ($this->items as $key=>$val) {
-            $selected = !is_array($this->value) ? $key == $this->value : in_array($key, $this->value);
-
+            if (is_array($this->value)) {
+                $selected = in_array($key, $this->value);
+            } else {
+                $selected = (string)$key === (string)$this->value;
+            }
+            
             $html_attrs = "type=\"$type\" name=\"" . htmlentities($name) . "\""
                 . "value=\"" . htmlentities($key) . "\""
                 . ($selected ? ' checked' : '');
@@ -41,7 +45,7 @@ class Choice extends ChoiceControl
              else $inputs[] = $input;
         }
         
-        $hidden = $type === 'checkbox' && $this->getOption('checkbox-hidden') ?
+        $hidden = $type === 'checkbox' && $this->getOption('add-hidden') ?
             '<input type="hidden" name="' . htmlentities($this->getName()) . '" value="">' . "\n" : '';
         
         // Build html control

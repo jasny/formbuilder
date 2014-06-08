@@ -19,7 +19,6 @@ class FormBuilder
         'required-suffix' => ' *',     // Suffix label for required controls
         'container' => true,           // Place each form element in a container
         'label' => true,               // Add a label for each form element
-        'checkbox-hidden' => true,     // Add a hidden for a checkbox to always send a value
         
         'error:required' => "Please fill out this field",
         'error:type' => "Please enter a {{type}}",
@@ -46,33 +45,33 @@ class FormBuilder
      * @var array
      */
     public static $elements = [
-        'form' => ['Jasny\FormBuilder\Form'],
+        'form' =>     ['Jasny\FormBuilder\Form'],
         'fieldset' => ['Jasny\FormBuilder\Fieldset'],
-        'link' => ['Jasny\FormBuilder\Link'],
-        'button' => ['Jasny\FormBuilder\Button'],
+        'link' =>     ['Jasny\FormBuilder\Hyperlink'],
+        'button' =>   ['Jasny\FormBuilder\Button'],
         
-        'choice' => ['Jasny\FormBuilder\Choice'],
-        'multi' => ['Jasny\FormBuilder\Choice', 'attr' => ['multiple'=>true]],
-        'input' => ['Jasny\FormBuilder\Input'],
-        'select' => ['Jasny\FormBuilder\Select'],
+        'choice' =>   ['Jasny\FormBuilder\Choice'],
+        'multi' =>    ['Jasny\FormBuilder\Choice', ['multiple'=>true]],
+        'input' =>    ['Jasny\FormBuilder\Input'],
+        'select' =>   ['Jasny\FormBuilder\Select'],
         'textarea' => ['Jasny\FormBuilder\Textarea'],
 
-        'text' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'text']],
-        'hidden' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'hidden']],
-        'file' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'file']],
-        'color' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'color']],
-        'number' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'number']],
-        'decimal' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'text', 'pattern'=>'-?\d+(\.\d+)?']],
-        'range' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'range']],
-        'date' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'date']],
-        'datetime' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'datetime-local']],
-        'time' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'time']],
-        'month' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'month']],
-        'week' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'week']],
-        'url' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'url']],
-        'email' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'email']],
+        'text' =>     ['Jasny\FormBuilder\Input', ['type'=>'text']],
+        'hidden' =>   ['Jasny\FormBuilder\Input', ['type'=>'hidden']],
+        'file' =>     ['Jasny\FormBuilder\Input', ['type'=>'file']],
+        'color' =>    ['Jasny\FormBuilder\Input', ['type'=>'color']],
+        'number' =>   ['Jasny\FormBuilder\Input', ['type'=>'number']],
+        'decimal' =>  ['Jasny\FormBuilder\Input', ['type'=>'text'], ['pattern'=>'-?\d+(\.\d+)?']],
+        'range' =>    ['Jasny\FormBuilder\Input', ['type'=>'range']],
+        'date' =>     ['Jasny\FormBuilder\Input', ['type'=>'date']],
+        'datetime' => ['Jasny\FormBuilder\Input', ['type'=>'datetime-local']],
+        'time' =>     ['Jasny\FormBuilder\Input', ['type'=>'time']],
+        'month' =>    ['Jasny\FormBuilder\Input', ['type'=>'month']],
+        'week' =>     ['Jasny\FormBuilder\Input', ['type'=>'week']],
+        'url' =>      ['Jasny\FormBuilder\Input', ['type'=>'url']],
+        'email' =>    ['Jasny\FormBuilder\Input', ['type'=>'email']],
         
-        'bootstrap/fileinput' => ['Jasny\FormBuilder\Bootstrap\Fileinput'],
+        'bootstrap/fileinput' =>  ['Jasny\FormBuilder\Bootstrap\Fileinput'],
         'bootstrap/imageinput' => ['Jasny\FormBuilder\Bootstrap\Imageinput'],
     ];
 
@@ -81,91 +80,45 @@ class FormBuilder
      * @var array
      */
     public static $decorators = [
-        'tidy' => ['Jasny\FormBuilder\Decorator\Tidy'],
+        'tidy' =>   ['Jasny\FormBuilder\Decorator\Tidy'],
         'indent' => ['Jasny\FormBuilder\Decorator\Dindent'],
+        
         'bootstrap' => ['Jasny\FormBuilder\Decorator\Bootstrap'],
     ];
-    
-    
-    /**
-     * Build an object using named arguments
-     * 
-     * @param string $class
-     * @param array  $args
-     * @param array  $defaults  Always named
-     * @return object
-     */
-    protected static function constructWithNamedArgs($class, array $args, array $defaults=[])
-    {
-        $refl = new \ReflectionClass($class);
-        $params = $refl->getMethod('__construct')->getParameters();
-        
-        $construct = []; // arguments for constructor
-        
-        foreach ($params as $param) {
-            $pn = $param->getName();
-            $pp = $param->getPosition();
-            
-            $value = isset($args[$pn]) ? $args[$pn] : (isset($args[$pp]) ? $args[$pp] : null);
-            
-            if (!isset($value)) {
-                $construct[$pp] = isset($defaults[$pn]) ? $defaults[$pn] : $param->getDefaultValue();
-            } elseif (isset($defaults[$pn]) && is_array($defaults[$pn]) && is_array($value)) {
-                $construct[$pp] = $value + $defaults[$pn];
-            } else {
-                $construct[$pp] = $value;
-            }
-        }
-        
-        return $refl->newInstanceArgs($construct);
-    }
-    
-    
-    /**
-     * General factory method
-     * 
-     * @param string $type  'element' or 'decorator'
-     * @param string $name  Element / Decorator name
-     * @param array  $args  Arguments passed to the constructor
-     * @return FormBuilder\Element|FormBuilder\Decorator
-     */
-    protected static function build($type, $name, $args=null)
-    {
-        switch ($type) {
-            case 'element': $items = static::$elements; break;
-            case 'decorator': $items = static::$decorators; break;
-            default: throw new \InvalidArgumentException("Type should be 'element' or 'decorator', not '$type'.");
-        }
-        
-        if (!isset($items[$name])) throw new \InvalidArgumentException("Unknown $type type '$name'.");
-        
-        $defaults = $items[$name];
-        $class = array_shift($defaults);
-        
-        return static::constructWithNamedArgs($class, $args, $defaults);
-    }
     
     /**
      * Create a form element
      * 
-     * @param string $name  Element name
-     * @param array  $args  Arguments passed to the constructor
-     * @return FormBuilder\Element
+     * @param string $name     Element name
+     * @param array  $options  Element options
+     * @param array  $attr     HTML attributes
+     * @return FormBuilder\Element|FormBuilder\FormElement
      */
-    public static function buildElement($name, $args=null)
+    public static function element($name, array $options=[], array $attr=[])
     {
-        return static::build('element', $name, $args);
+        if (!isset(static::$elements[$name])) throw new \InvalidArgumentException("Unknown element type '$name'.");
+        
+        $class = static::$elements[$name][0];
+        if (isset(static::$elements[$name][1])) $options += static::$elements[$name][1];
+        if (isset(static::$elements[$name][2])) $attr += static::$elements[$name][2];
+        
+        return new $class($options, $attr);
     }
     
     /**
      * Create a form decorator
      * 
-     * @param string $name  Decorator name
-     * @param array  $args  Arguments passed to the constructor
+     * @param string $name     Decorator name
+     * @param array  $options  Decorator options
      * @return FormBuilder\Decorator
      */
-    public static function buildDecorator($name, $args=null)
+    public static function decorator($name, array $options=[])
     {
-        return static::build('decorator', $name, $args);
+        if (!isset(static::$decorators[$name])) throw new \InvalidArgumentException("Unknown decorator '$name'.");
+        
+        $class = static::$decorators[$name][0];
+        if (isset(static::$decorators[$name][1])) $options += static::$decorators[$name][1];
+        
+        return new $class($options);
     }
 }

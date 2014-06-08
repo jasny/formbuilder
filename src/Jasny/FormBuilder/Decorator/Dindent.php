@@ -7,6 +7,10 @@ use Jasny\FormBuilder\Decorator;
 /**
  * Indent the HTML.
  * @link https://github.com/gajus/dindent
+ * 
+ * @param int     spaces                 The number of spaces.
+ * @param array   indentation_character  Specify the indentation char(s), use instead of spaces.
+ * @param boolean deep                   Wether or not to indent each individual child node.
  */
 class Dindent extends Decorator
 {
@@ -20,21 +24,21 @@ class Dindent extends Decorator
      * Wether or not to indent each individual child node.
      * @var boolean
      */
-    protected $deep;
+    protected $deep = false;
     
     /**
-     * Class constructor.
+     * Class constructor
      * 
-     * @param int     $spaces   The number of spaces
-     * @param array   $options  Dindent options
-     * @param boolean $deep     Wether or not to indent each individual child node.
+     * @param array $options
      */
-    public function __construct($spaces=null, array $options=[], $deep=false)
+    public function __construct(array $options=[])
     {
-        if (isset($spaces)) $options['indentation_character'] = str_repeat(' ', $spaces);
+        if (!class_exists('\Gajus\Dindent\Parser')) throw new Exception("Please add the Dindent library");
         
+        if (isset($options['spaces'])) $options += ['indentation_character' => str_repeat(' ', $options['spaces'])];
         $this->options = $options;
-        $this->deep = $deep;
+        
+        $this->deep = !empty($options['deep']);
     }
     
     /**

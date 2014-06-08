@@ -5,7 +5,7 @@ namespace Jasny\FormBuilder;
 use Jasny\FormBuilder;
 
 /**
- * Base class for HTML nodes.
+ * Base class for HTML elements.
  */
 abstract class Element
 {
@@ -43,12 +43,15 @@ abstract class Element
     /**
      * Class constructor.
      * 
-     * @param array $attr     HTML attributes
      * @param array $options  Element options
+     * @param array $attr     HTML attributes
      */
-    public function __construct($attr=[], array $options=[])
+    public function __construct(array $options=[], array $attr=[])
     {
-        $this->attr = new Attr((array)$attr + $this->attr);
+        if (isset($options['id'])) $attr['id'] = $options['id'];
+        unset($options['id']);
+        
+        $this->attr = new Attr($attr + $this->attr);
         $this->options = array_merge($this->options, $options);
     }
     
@@ -57,13 +60,13 @@ abstract class Element
      * Add a decorator to the element.
      * 
      * @param Decorator|string $decorator  Decorator object or name
-     * @param array            $args       Arguments passed to the constructor
+     * @param array            $options
      * @return Element  $this
      */
-    public function addDecorator($decorator, array $args=[])
+    public function addDecorator($decorator, array $options=[])
     {
         if (!$decorator instanceof Decorator) {
-            $decorator = FormBuilder::buildDecorator($decorator, $args);
+            $decorator = FormBuilder::decorator($decorator, $options);
         }
         
         $decorator->connect($this);
@@ -128,6 +131,21 @@ abstract class Element
     
     
     /**
+     * Get the form to wich this element is added.
+     * 
+     * @return Form
+     */
+    public function getForm()
+    {
+        $parent = $this->getParent();
+        while ($parent && !$parent instanceof Form) {
+            $parent = $parent->getParent();
+        }
+        
+        return $parent;
+    }
+
+    /**
      * Return parent object.
      * 
      * @return Group
@@ -140,13 +158,30 @@ abstract class Element
     /**
      * Alias of Element::getParent()
      * 
-     * @return Element
+     * @return Group
      */
     final public function end()
     {
         return $this->getParent();
     }
     
+    
+    /**
+     * Get element id.
+     * 
+     * @return string
+     */
+    public function getId()
+    {
+        if (!isset($this->attr['id'])) {
+            $id = base_convert(uniqid(), 16, 32);
+            if ($this->getForm()) $id = $this->getForm()->getId() . '-' . $id;
+
+            $this->attr['id'] = $id;
+        }
+        
+        return $this->attr['id'];
+    }
     
     /**
      * Set HTML attribute(s).
@@ -371,18 +406,5 @@ abstract class Element
         if ($value instanceof FormElement) return $value->getValue();
         if ($value instanceof \DateTime) return strftime('%x', $value->getTimestamp());
         return (string)$value;
-    }
-
-    
-    /**
-     * Factory method
-     * 
-     * @param string $element
-     * @return FormBuilder\Element|FormBuilder\FormElement
-     */
-    protected function build($element, array $args=[])
-    {
-        if ($this->parent) return $this->parent->build($element, $args);
-        return FormBuilder::buildElement($element, $args);
     }
 }

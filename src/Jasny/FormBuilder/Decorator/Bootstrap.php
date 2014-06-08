@@ -11,10 +11,12 @@ use Jasny\FormBuilder\Choice;
 
 /**
  * Render element for use with Bootstrap.
- * @link http://getbootstrap.com
- * 
  * Optionaly use features from Jasny Bootstrap.
+ * 
+ * @link http://getbootstrap.com
  * @link http://jasny.github.io/bootstrap
+ * 
+ * @option int version  Which major Bootstrap version is used
  * 
  * @todo Add classes for horizontal forms
  */
@@ -23,11 +25,15 @@ class Bootstrap extends Decorator
     /**
      * Class constructor
      * 
-     * @param int $version  Which major version of Boostrap is used
+     * @param array $options
      */
-    public function __construct($version)
+    public function __construct(array $options=[])
     {
-        if ($version != 3) throw new \Exception("Only Boostrap version 3 is supported");
+        if (!isset($options['version'])) {
+            trigger_error("You should specify which version of Bootstrap is used.", E_USER_WARNING);
+        } else if ((int)$options['version'] !== 3) {
+            throw new \Exception("Only Boostrap version 3 is supported");
+        }
     }
     
     /**

@@ -4,18 +4,32 @@ namespace Jasny\FormBuilder;
 
 /**
  * Representation of an HTML <form> with bootstrap elements.
+ * 
+ * @option method  Form method attribute
+ * @option action  Form action attribute
  */
 class Form extends Group
 {
+    /**
+     * @var string
+     */
+    protected $tagname = 'form';
+    
     /**
      * Class constructor.
      * 
      * @param array $attrs    HTML attributes
      * @param array $options  Element options
      */
-    public function __construct(array $attrs=[], array $options=[])
+    public function __construct(array $options=[], array $attr=[])
     {
-        parent::__construct('form', $attrs + ['method'=>'post'], $options);
+        if (isset($options['method'])) $attr['method'] = $options['method'];
+        $attr += ['method'=>'post'];
+        
+        if (isset($options['action'])) $attr['action'] = $options['action'];
+        
+        unset($options['method'], $options['action']);
+        parent::__construct($options, $attr);
     }
     
     

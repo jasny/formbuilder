@@ -10,12 +10,6 @@ abstract class Control extends Element implements FormElement
     use Validation;
     
     /**
-     * FormElement description
-     * @var string
-     */
-    protected $description;
-    
-    /**
      * Error message
      * @var string
      */
@@ -25,53 +19,22 @@ abstract class Control extends Element implements FormElement
     /**
      * Class constructor.
      * 
-     * @param array $name
-     * @param array $description  Description as displayed on the label 
-     * @param array $attr         HTML attributes
-     * @param array $options      Element options
+     * @param array $options  Element options
+     * @param array $attr     HTML attributes
      */
-    public function __construct($name=null, $description=null, array $attr=[], array $options=[])
+    public function __construct(array $options=[], array $attr=[])
     {
-        if (isset($name)) $attr = compact('name') + $attr;
-        $this->setDescription($description ?: ucfirst(str_replace('_', ' ', $name)));
+        if (isset($options['name'])) $attr = ['name'=>$options['name']] + $attr;
         
-        parent::__construct($attr, $options);
-    }
-    
-    
-    /**
-     * Get the form to wich this control is added.
-     * 
-     * @return Form
-     */
-    public function getForm()
-    {
-        $parent = $this->getParent();
-        while ($parent && !$parent instanceof Form) {
-            $parent = $parent->getParent();
+        if (!isset($options['description']) && isset($attr['name'])) {
+            $options['description'] = ucfirst(str_replace('_', ' ', $attr['name']));
         }
         
-        return $parent;
+        unset($options['name']);
+        parent::__construct($options, $attr);
     }
-
-    /**
-     * Get control identifier.
-     * 
-     * @return string
-     */
-    public function getId()
-    {
-        $id = $this->getAttr('id');
-        if ($id) return $id;
-        
-        $name = $this->getName();
-        $id = ($name ?: base_convert(uniqid(), 16, 32));
-        if ($this->getForm()) $id = $this->getForm()->getId() . '-' . $id;
-        
-        $this->setAttr('id', $id);
-        return $id;
-    }
-
+    
+    
     /**
      * Set the name of the element.
      * 
@@ -80,7 +43,7 @@ abstract class Control extends Element implements FormElement
      */
     public function setName($name)
     {
-        return $this->setAttr('name', $name);
+        return $this->attr['name'] = $name;
     }
     
     /**
@@ -90,7 +53,7 @@ abstract class Control extends Element implements FormElement
      */
     public function getName()
     {
-        return preg_replace('/\[\]$/', '', $this->getAttr('name'));
+        return preg_replace('/\[\]$/', '', $this->attr['name']);
     }
     
     /**
@@ -114,9 +77,9 @@ abstract class Control extends Element implements FormElement
      * @param string $description
      * @return FormElement $this
      */
-    public function setDescription($description)
+    final public function setDescription($description)
     {
-        $this->description = $description;
+        $this->setOption('description', $description);
         return $this;
     }
     
@@ -125,9 +88,9 @@ abstract class Control extends Element implements FormElement
      * 
      * @return string
      */
-    public function getDescription()
+    final public function getDescription()
     {
-        return $this->description;
+        return $this->getOption('description');
     }
     
     /**
@@ -137,9 +100,9 @@ abstract class Control extends Element implements FormElement
      */
     public function getOptions()
     {
-        $options = parent::getOptions() + ['container' => true];
+        $options = parent::getOptions();
         
-        if (!isset($this->options['label']) && !$this->getDescription()) {
+        if (!isset($this->options['label']) && empty($this->options['description'])) {
             $options['label'] = false;
         }
         
@@ -270,7 +233,7 @@ abstract class Control extends Element implements FormElement
     {
         return '<label for="' . $this->getId() . '">'
             . $this->getDescription()
-            . ($this->getAttr('required') ? $this->option('required-suffix') : '')
+            . ($this->attr['required'] ? $this->getOption('required-suffix') : '')
             . '</label>';
     }
 
@@ -295,7 +258,7 @@ abstract class Control extends Element implements FormElement
             $html = "<label>\n"
                 . $html . "\n"
                 . $this->getDescription()
-                . ($this->getAttr('required') ? $this->getOption('required-suffix') : '') . "\n"
+                . ($this->attr['required'] ? $this->getOption('required-suffix') : '')
                 . "</label>";
         }
         

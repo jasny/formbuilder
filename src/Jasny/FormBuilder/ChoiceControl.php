@@ -10,7 +10,7 @@ abstract class ChoiceControl extends Control
     /**
      * @var array
      */
-    protected $items;
+    protected $items = [];
     
     /**
      * @var string
@@ -20,18 +20,22 @@ abstract class ChoiceControl extends Control
     /**
      * Class constructor.
      * 
-     * @param array $name
-     * @param array $items        Key/value pairs for each choice
-     * @param array $description  Description as displayed on the label 
-     * @param array $attrs        HTML attributes
-     * @param array $options      Element options
+     * @param array $options  Element options
+     * @param array $attr     HTML attributes
      */
-    public function __construct($name=null, array $items=[], $description=null, array $attrs=[], array $options=[])
+    public function __construct(array $options=[], array $attr=[])
     {
-        if (isset($name) && !empty($attrs['multiple'])) $name = $name . '[]';
+        if (isset($options['name'])) $attr['name'] = $options['name'];
+        if (!isset($options['multiple'])) $options['multiple'] = isset($attr['multiple']) ? $attr['multiple'] : false;
         
-        parent::__construct($name, $description, $attrs, $options);
-        $this->items = $items;
+        if (isset($attr['name']) && !empty($options['multiple']) && substr($attr['name'], -2) !== '[]') {
+            $attr['name'] .= '[]';
+        }
+        
+        if (isset($options['items'])) $this->items = $options['items'];
+        
+        unset($options['name'], $options['items']);
+        parent::__construct($attr, $options);
     }
     
     

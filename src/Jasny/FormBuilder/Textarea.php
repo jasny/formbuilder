@@ -4,6 +4,12 @@ namespace Jasny\FormBuilder;
 
 /**
  * Representation of a <textarea> element in a Bootstrap form.
+ * 
+ * @option id           Element id
+ * @option name         Element name
+ * @option description  Description as displayed on the label
+ * @option type         HTML5 input type
+ * @option value        Element value
  */
 class Textarea extends Control
 {
@@ -15,15 +21,12 @@ class Textarea extends Control
     /**
      * Class constructor.
      * 
-     * @param string $name
-     * @param string $description  Description as displayed on the label 
-     * @param mixed  $value
-     * @param array  $attr         HTML attributes
-     * @param array  $options      FormElement options
+     * @param array $options  Element options
+     * @param array $attr     HTML attributes
      */
-    public function __construct($name=null, $description=null, $value=null, array $attr=[], array $options=[])
+    public function __construct(array $options=[], array $attr=[])
     {
-        if (isset($value)) $this->value = $value;
+        if (isset($options['value'])) $this->value = $options['value'];
         
         if (!isset($attr['placeholder'])) {
             $attr['placeholder'] = function() {
@@ -31,7 +34,8 @@ class Textarea extends Control
             };
         }
         
-        parent::__construct($name, $description, $attr, $options);
+        unset($options['value']);
+        parent::__construct($options, $attr);
     }
     
     /**
