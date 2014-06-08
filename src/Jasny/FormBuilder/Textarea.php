@@ -13,6 +13,28 @@ class Textarea extends Control
     protected $value;
     
     /**
+     * Class constructor.
+     * 
+     * @param string $name
+     * @param string $description  Description as displayed on the label 
+     * @param mixed  $value
+     * @param array  $attr         HTML attributes
+     * @param array  $options      FormElement options
+     */
+    public function __construct($name=null, $description=null, $value=null, array $attr=[], array $options=[])
+    {
+        if (isset($value)) $this->value = $value;
+        
+        if (!isset($attr['placeholder'])) {
+            $attr['placeholder'] = function() {
+                return $this->getOption('label') ? null : $this->getDescription();
+            };
+        }
+        
+        parent::__construct($name, $description, $attr, $options);
+    }
+    
+    /**
      * Get the value of the control.
      * 
      * @return string
@@ -60,13 +82,8 @@ class Textarea extends Control
      * 
      * @return string
      */
-    protected function generateControl()
+    protected function renderControl()
     {
-        if (!isset($this->attr->placeholder) && !$this->getOption('label')) {
-            $extra['placeholder'] = $this->getDescription();
-        }
-        
-        $attr = $this->attr->render($extra);
-        return "<textarea $attr>" . $this->getValue() . "</textarea>";
+        return "<textarea {$this->attr}>" . $this->getValue() . "</textarea>";
     }
 }

@@ -8,16 +8,23 @@ namespace Jasny\FormBuilder;
 class Fieldset extends Group
 {
     /**
-     * The HTML tag name.
-     * @var string
-     */
-    protected $tagname = 'fieldset';
-    
-    /**
      * <legend> of the fieldset
      * @var string
      */
     protected $legend;
+    
+    /**
+     * Class constructor.
+     * 
+     * @param string $legend 
+     * @param array  $attr     HTML attributes
+     * @param array  $options  FormElement options
+     */
+    public function __construct($legend=null, array $attr=[], array $options=[])
+    {
+        if (isset($legend)) $this->legend = $legend;
+        parent::__construct('fieldset', $attr, $options);
+    }
     
     /**
      * Set the legend of the fieldset.
@@ -46,16 +53,10 @@ class Fieldset extends Group
      * 
      * @return string
      */
-    protected function render()
+    public function open()
     {
-        $html = "<fieldset" . $this->renderAttrs() . ">\n";
-        if (isset($this->legend)) $html .= "<legend>" . $this->legend . "</legend>\n";
-        
-        foreach ($this->elements as $element) {
-            $html .= (string)$element . "\n";
-        }
-        
-        $html .= "</fieldset>";
+        $html = "<fieldset {$this->attr}>";
+        if (isset($this->legend)) $html .= "\n<legend>" . $this->legend . "</legend>";
         
         return $html;
     }

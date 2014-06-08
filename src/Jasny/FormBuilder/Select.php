@@ -15,13 +15,13 @@ class Select extends ChoiceControl
      * 
      * @return string
      */
-    protected function generateControl()
+    protected function renderControl()
     {
         $selected_first = (boolean)$this->getOption('selected-first');
         
         $opts = $opts_first = [];
         
-        foreach ($this->values as $key=>$val) {
+        foreach ($this->items as $key=>$val) {
             $selected = !is_array($this->value) ? $key == $this->value : in_array($key, $this->value);
             $opt = "<option value=\"" . htmlentities($key) . "\"" . ($selected ? ' selected' : '') . ">"
                 . htmlentities($val) . "</option>\n";
@@ -30,7 +30,7 @@ class Select extends ChoiceControl
              else $opts[] = $opt;
         }
         
-        $html = "<select" . $this->renderAttrs() . ">\n"
+        $html = "<select {$this->attr}>\n"
             . join("\n", array_merge($opts_first, $opts))
             . "</select>\n";
         

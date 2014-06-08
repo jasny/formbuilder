@@ -21,6 +21,20 @@ abstract class Group extends Element
 
     
     /**
+     * Class constructor.
+     * 
+     * @param string $name
+     * @param string $legend 
+     * @param array  $attr     HTML attributes
+     * @param array  $options  FormElement options
+     */
+    public function __construct($tagname, array $attr=[], array $options=[])
+    {
+        $this->tagname = $tagname;
+        parent::__construct($attr, $options);
+    }
+    
+    /**
      * Apply modifications by decorator
      * 
      * @param Decorator $decorator
@@ -40,12 +54,13 @@ abstract class Group extends Element
      * Add an child to the group.
      * 
      * @param Element|string $child
-     * @return Group  $this
+     * @param array          $args   Arguments that are passed to the constructor
+     * @return Group $this
      */
-    public function add($child)
+    public function add($child, array $args=[])
     {
         if (is_string($child) && $child[0] !== '<') {
-            $child = $this->build($child, array_slice(func_get_args(), 1));
+            $child = $this->build($child, $args);
         }
         
         if ($child instanceof Element) $child->parent = $this;
@@ -61,13 +76,18 @@ abstract class Group extends Element
     /**
      * Add an child and return it.
      * 
-     * @param Element|string  $child
-     * @return Element  $child
+     * @param Element|string $child
+     * @param array          $args   Arguments that are passed to the constructor
+     * @return Element $child
      */
-    public function begin($child)
+    public function begin($child, array $args=[])
     {
         if (is_string($child) && $child[0] !== '<') {
-            $child = $this->build($child, array_slice(func_get_args(), 1));
+            $child = $this->build($child, $args);
+        }
+        
+        if (!$child instanceof Element) {
+            throw new \InvalidArgumentException("To add a " . gettype($child) . " use the add() method");
         }
         
         $this->add($child);
@@ -240,7 +260,7 @@ abstract class Group extends Element
      */
     protected function render()
     {
-        $html = $this->open();
+        $html = $this->open() . "\n";
         
         foreach ($this->children as $child) {
             if (!isset($child) || ($child instanceof Element && !$child->getOption('render'))) continue;

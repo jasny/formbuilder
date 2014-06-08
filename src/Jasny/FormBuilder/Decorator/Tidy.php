@@ -1,41 +1,51 @@
 <?php
 
-namespace Jasny\FormBuilder;
+namespace Jasny\FormBuilder\Decorator;
 
 use Jasny\FormBuilder\Decorator;
 
 /**
  * Tidy up the HTML.
  * @link http://www.php.net/tidy
- * 
- * Set config option 'deep' to true, to tidy each individual child node.
  */
 class Tidy extends Decorator
 {
     /**
+     * Wether or not to tidy each individual child node.
+     * @var boolean
+     */
+    protected $deep;
+    
+    /**
      * Tidy configuration
      * @var array
      */
-    protected $config;
+    protected $config = [
+        'doctype' => 'omit',
+        'output-html' => true,
+        'show-body-only' => true,
+    ];
     
     /**
      * Class constructor.
      * 
      * @param array $config  Tidy configuration
+     * @param boolean $deep  Wether or not to tidy each individual child node.
      */
-    public function __construct(array $config=[])
+    public function __construct(array $config=[], $deep=false)
     {
-        $this->config = $config;
+        $this->config = $config + $this->config;
+        $this->deep = $deep;
     }
     
     /**
-     * Wether or not to apply the decorator to all descendants.
+     * Wether or not to tidy each individual child node.
      * 
      * @return boolean
      */
     public function isDeep()
     {
-        return !empty($this->config['deep']);
+        return $this->deep;
     }
     
     /**
@@ -47,10 +57,8 @@ class Tidy extends Decorator
      */
     public function render($element, $html)
     {
-        $tidy = new \tidy();
-        $tidy->parseString($html, $this->config);
-        $html = join("\n", $tidy->body()->child);
-        
-        return $html;
+        $tidy = tidy_parse_string($html, $this->config);
+        $tidy->cleanRepair();
+        return join($tidy->body()->child, "\n");
     }
 }

@@ -17,6 +17,12 @@
     "require": {
         "php": ">=5.4.0"
     },
+    "require-dev": {
+        "gajus/dindent": "dev-master#cb8579d82d11873d5f650aab333c82f8f9eec62f"
+    },
+    "suggests": {
+        "gajus/dindent": "Use the Dindent decoractor to fix indentiation"
+    },
     "autoload": {
         "psr-0": {
             "Jasny\\FormBuilder": "src/"

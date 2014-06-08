@@ -7,9 +7,14 @@ use Jasny\FormBuilder\Element;
 use Jasny\FormBuilder\FormElement;
 use Jasny\FormBuilder\Button;
 use Jasny\FormBuilder\Input;
+use Jasny\FormBuilder\Choice;
 
 /**
- * Render element for use with Bootstrap
+ * Render element for use with Bootstrap.
+ * @link http://getbootstrap.com
+ * 
+ * Optionaly use features from Jasny Bootstrap.
+ * @link http://jasny.github.io/bootstrap
  * 
  * @todo Add classes for horizontal forms
  */
@@ -43,7 +48,9 @@ class Bootstrap extends Decorator
      */
     public function apply($element)
     {
-        if ($element instanceof FormElement) $element->addClass('form-control');
+        if ($element instanceof FormElement && !$element instanceof Choice) {
+            $element->addClass('form-control');
+        }
         
         $isButton = $element instanceof Button ||
             ($element instanceof Input && in_array($element->attr['type'], ['button', 'submit', 'reset']));
@@ -87,8 +94,8 @@ class Bootstrap extends Decorator
         
         return "<label{$class} for=\"" . $element->getId() . "\">"
             . $element->getDescription()
-            . ($element->getAttr('required') ? $element->getOption('required-suffix') : '') . "\n"
-            . "</label>\n";
+            . ($element->getAttr('required') ? $element->getOption('required-suffix') : '')
+            . "</label>";
     }
     
     /**

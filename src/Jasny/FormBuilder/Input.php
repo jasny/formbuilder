@@ -10,13 +10,15 @@ class Input extends Control
     /**
      * Class constructor.
      * 
-     * @param array $name
-     * @param array $description  Description as displayed on the label 
-     * @param array $attr         HTML attributes
-     * @param array $options      FormElement options
+     * @param string $name
+     * @param string $description  Description as displayed on the label 
+     * @param mixed  $value
+     * @param array  $attr         HTML attributes
+     * @param array  $options      FormElement options
      */
-    public function __construct($name=null, $description=null, array $attr=[], array $options=[])
+    public function __construct($name=null, $description=null, $value=null, array $attr=[], array $options=[])
     {
+        if (isset($value)) $attr['value'] = $value;
         $attr += $this->attr + ['type'=>'text'];
         
         if ($attr['type'] === 'checkbox' && !isset($attr['value'])) $attr['value'] = 1;

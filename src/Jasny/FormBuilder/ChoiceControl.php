@@ -3,14 +3,14 @@
 namespace Jasny\FormBuilder;
 
 /**
- * Representation of a control with values in a form.
+ * Representation of a control with items in a form.
  */
 abstract class ChoiceControl extends Control
 {
     /**
      * @var array
      */
-    protected $values;
+    protected $items;
     
     /**
      * @var string
@@ -21,17 +21,17 @@ abstract class ChoiceControl extends Control
      * Class constructor.
      * 
      * @param array $name
-     * @param array $values       Key/value pairs for each choice
+     * @param array $items        Key/value pairs for each choice
      * @param array $description  Description as displayed on the label 
      * @param array $attrs        HTML attributes
-     * @param array $options      FormElement options
+     * @param array $options      Element options
      */
-    public function __construct($name=null, array $values=[], $description=null, array $attrs=[], array $options=[])
+    public function __construct($name=null, array $items=[], $description=null, array $attrs=[], array $options=[])
     {
         if (isset($name) && !empty($attrs['multiple'])) $name = $name . '[]';
         
         parent::__construct($name, $description, $attrs, $options);
-        $this->values = $values;
+        $this->items = $items;
     }
     
     
@@ -46,17 +46,17 @@ abstract class ChoiceControl extends Control
     }
 
     /**
-     * Detect if keys are in fact the values.
+     * Detect if keys are in fact the items.
      * 
-     * @param array $values
+     * @param array $items
      * @return boolean
      */
-    protected function keysHoldValues(array $values)
+    protected function keysHoldValues(array $items)
     {
         $usekeys = false;
         
-        foreach ($values as $value) {
-            if (!array_key_exists($value, $this->values)) {
+        foreach ($items as $value) {
+            if (!array_key_exists($value, $this->items)) {
                 $usekeys = true;
                 break;
             }
@@ -64,8 +64,8 @@ abstract class ChoiceControl extends Control
         
         if (!$usekeys) return false;
 
-        foreach (array_keys($values) as $key) {
-            if (!array_key_exists($key, $this->values)) {
+        foreach (array_keys($items) as $key) {
+            if (!array_key_exists($key, $this->items)) {
                 $usekeys = false;
                 break;
             }
@@ -83,7 +83,7 @@ abstract class ChoiceControl extends Control
     public function setValue($value)
     {
         if (is_array($value) && $this->keysHoldValues($value)) $value = array_keys($value);
-        if ($this->getAttr('multiple') && !is_array($value)) $value = (string)$value === '' ? [] : (array)$value;
+        if ($this->attr['multiple'] && !is_array($value)) $value = (string)$value === '' ? [] : (array)$value;
         
         $this->value = $value;
         return $this;

@@ -8,22 +8,14 @@ namespace Jasny\FormBuilder;
 class Form extends Group
 {
     /**
-     * The HTML tag name.
-     * @var string
-     */
-    protected $tagname = 'form';
-
-    
-    /**
      * Class constructor.
      * 
      * @param array $attrs    HTML attributes
      * @param array $options  Element options
      */
-    public function __construct(array $attrs=array(), array $options=array())
+    public function __construct(array $attrs=[], array $options=[])
     {
-        $attrs += ['method'=>'post'];
-        parent::__construct($attrs, $options);
+        parent::__construct('form', $attrs + ['method'=>'post'], $options);
     }
     
     
@@ -41,16 +33,6 @@ class Form extends Group
         return $this->attr['id'];
     }
     
-    /**
-     * Get all options.
-     * 
-     * @return array
-     */
-    public function getOptions()
-    {
-        return parent::getOptions() + ['container'=>true, 'label'=>true];
-    }
-    
     
     /**
      * Check if method matches and apply $_POST or $_GET parameters.
@@ -60,9 +42,10 @@ class Form extends Group
      */
     public function isSubmitted($apply=true)
     {
-        if ($_SERVER['REQUEST_METHOD'] != $this->getAttr('method')) return false;
+        $method = strtolower($_SERVER['REQUEST_METHOD']);
+        if ($method != $this->getAttr('method')) return false;
         
-        if ($apply) $this->setValues($_SERVER['REQUEST_METHOD'] === 'GET' ? $_GET : $_POST + $_FILES);
+        if ($apply) $this->setValues($method === 'GET' ? $_GET : $_POST + $_FILES);
         return true;
     }
 }

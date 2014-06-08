@@ -17,6 +17,9 @@ class FormBuilder
         'validation-script' => true,   // Include <script> for validation that isn't supported by HTML5
         'add-hidden' => true,          // Add hidden input for checkbox inputs
         'required-suffix' => ' *',     // Suffix label for required controls
+        'container' => true,           // Place each form element in a container
+        'label' => true,               // Add a label for each form element
+        'checkbox-hidden' => true,     // Add a hidden for a checkbox to always send a value
         
         'error:required' => "Please fill out this field",
         'error:type' => "Please enter a {{type}}",
@@ -28,7 +31,8 @@ class FormBuilder
         'error:same' => "Please match the value of {{other}}",
         'error:upload' => [
             UPLOAD_ERR_INI_SIZE => "The uploaded file exceeds the upload_max_filesize directive in php.ini.",
-            UPLOAD_ERR_FORM_SIZE => "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.",
+            UPLOAD_ERR_FORM_SIZE =>
+                "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.",
             UPLOAD_ERR_PARTIAL => "The uploaded file was only partially uploaded.",
             UPLOAD_ERR_NO_FILE => "No file was uploaded.",
             UPLOAD_ERR_NO_TMP_DIR => "Missing a temporary folder.",
@@ -49,12 +53,12 @@ class FormBuilder
         
         'choice' => ['Jasny\FormBuilder\Choice'],
         'multi' => ['Jasny\FormBuilder\Choice', 'attr' => ['multiple'=>true]],
-        'hidden' => ['Jasny\FormBuilder\Hidden'],
         'input' => ['Jasny\FormBuilder\Input'],
         'select' => ['Jasny\FormBuilder\Select'],
-        'textarea' => ['Jasny\FormBuilder\TextArea'],
+        'textarea' => ['Jasny\FormBuilder\Textarea'],
 
         'text' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'text']],
+        'hidden' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'hidden']],
         'file' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'file']],
         'color' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'color']],
         'number' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'number']],
@@ -78,8 +82,8 @@ class FormBuilder
      */
     public static $decorators = [
         'tidy' => ['Jasny\FormBuilder\Decorator\Tidy'],
+        'indent' => ['Jasny\FormBuilder\Decorator\Dindent'],
         'bootstrap' => ['Jasny\FormBuilder\Decorator\Bootstrap'],
-        'bootstrap3' => ['Jasny\FormBuilder\Decorator\Bootstrap', 'version'=>3]
     ];
     
     

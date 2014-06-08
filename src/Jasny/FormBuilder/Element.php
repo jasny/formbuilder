@@ -57,13 +57,13 @@ abstract class Element
      * Add a decorator to the element.
      * 
      * @param Decorator|string $decorator  Decorator object or name
-     * @param mixed            $...        Additional arguments are passed to the constructor
+     * @param array            $args       Arguments passed to the constructor
      * @return Element  $this
      */
-    public function addDecorator($decorator)
+    public function addDecorator($decorator, array $args=[])
     {
         if (!$decorator instanceof Decorator) {
-            $decorator = FormBuilder::buildDecorator($decorator, array_slice(func_get_args(), 1));
+            $decorator = FormBuilder::buildDecorator($decorator, $args);
         }
         
         $decorator->connect($this);
