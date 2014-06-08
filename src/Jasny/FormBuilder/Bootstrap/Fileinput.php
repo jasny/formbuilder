@@ -29,7 +29,7 @@ class Fileinput extends Base\Control
      * @param array $name
      * @param array $description  Description as displayed on the label 
      * @param array $attrs        HTML attributes
-     * @param array $options      Element options
+     * @param array $options      FormElement options
      */
     public function __construct($name=null, $description=null, array $attrs=[], array $options=[])
     {
@@ -104,7 +104,7 @@ class Fileinput extends Base\Control
      * Set the name of the element.
      * 
      * @param string $name
-     * @return Element $this
+     * @return FormElement $this
      */
     public function setName($name)
     {

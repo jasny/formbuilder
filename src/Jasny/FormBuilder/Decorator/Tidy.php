@@ -41,11 +41,11 @@ class Tidy extends Decorator
     /**
      * Render to HTML
      * 
-     * @param Node   $node
+     * @param Element   $element
      * @param string $html  Original rendered html
      * @return string
      */
-    public function render($node, $html)
+    public function render($element, $html)
     {
         $tidy = new \tidy();
         $tidy->parseString($html, $this->config);

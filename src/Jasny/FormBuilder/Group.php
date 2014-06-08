@@ -5,7 +5,7 @@ namespace Jasny\FormBuilder;
 /**
  * Base class for an HTML child with children.
  */
-abstract class Group extends Node
+abstract class Group extends Element
 {
     /**
      * The HTML tag name.
@@ -31,7 +31,7 @@ abstract class Group extends Node
         
         if ($decorator->isDeep()) {
             foreach ($this->children as $child) {
-                if ($child instanceof Node) $child->applyDecorator($decorator);
+                if ($child instanceof Element) $child->applyDecorator($decorator);
             }
         }
     }
@@ -39,7 +39,7 @@ abstract class Group extends Node
     /**
      * Add an child to the group.
      * 
-     * @param Node|string $child
+     * @param Element|string $child
      * @return Group  $this
      */
     public function add($child)
@@ -48,7 +48,7 @@ abstract class Group extends Node
             $child = $this->build($child, array_slice(func_get_args(), 1));
         }
         
-        if ($child instanceof Node) $child->parent = $this;
+        if ($child instanceof Element) $child->parent = $this;
         
         foreach ($this->getDecorators() as $decorator) {
             if ($decorator->isDeep()) $child->applyDecorator($decorator);
@@ -61,8 +61,8 @@ abstract class Group extends Node
     /**
      * Add an child and return it.
      * 
-     * @param Node|string  $child
-     * @return Node  $child
+     * @param Element|string  $child
+     * @return Element  $child
      */
     public function begin($child)
     {
@@ -88,20 +88,20 @@ abstract class Group extends Node
     /**
      * Find a specific child (deep search).
      * 
-     * @param string $name  Element name or #id
-     * @return Node
+     * @param string $name  FormElement name or #id
+     * @return Element
      */
     public function get($name)
     {
         if ($name[0] == '#') $id = substr($name, 1);
         
         foreach ($this->children as $child) {
-            if ($child instanceof Element) {
+            if ($child instanceof FormElement) {
                 if (isset($id) ? $child->getId() == $id : $child->getName() == $name) {
                     $found = $child;
                 }
             } elseif ($child instanceof Group) {
-                $found = $child->getNode($name);
+                $found = $child->getElement($name);
             }
             
             if (isset($found)) return $found;
@@ -120,7 +120,7 @@ abstract class Group extends Node
         $elements = array();
         
         foreach ($this->children as $child) {
-            if ($child instanceof Element) {
+            if ($child instanceof FormElement) {
                 $name = $child->getName();
                 if ($name) {
                     $elements[$name] = $child;
@@ -180,7 +180,7 @@ abstract class Group extends Node
         $ret = true;
         
         foreach ($this->children as $child) {
-            if (!$child instanceof Node || $child->getOption('validation') == false) continue;
+            if (!$child instanceof Element || $child->getOption('validation') == false) continue;
             $ret = $ret && $child->isValid();
         }
         
@@ -214,7 +214,7 @@ abstract class Group extends Node
         $html = $this->open();
         
         foreach ($this->children as $child) {
-            if (!isset($child) || ($child instanceof Node && !$child->getOption('render'))) continue;
+            if (!isset($child) || ($child instanceof Element && !$child->getOption('render'))) continue;
             $html .= (string)$child . "\n";
         }
         

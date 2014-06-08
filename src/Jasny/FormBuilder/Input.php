@@ -13,7 +13,7 @@ class Input extends Control
      * @param array $name
      * @param array $description  Description as displayed on the label 
      * @param array $attr         HTML attributes
-     * @param array $options      Element options
+     * @param array $options      FormElement options
      */
     public function __construct($name=null, $description=null, array $attr=[], array $options=[])
     {
@@ -42,7 +42,7 @@ class Input extends Control
     public function getValue()
     {
         $value = $this->attr['value'];
-        if ($value instanceof Element) $value = $value->getValue();
+        if ($value instanceof FormElement) $value = $value->getValue();
 
         $type = $this->attr['type'];
         if (($type === 'checkbox' || $type === 'radio') && !$this->attr->get('checked')) $value = false;

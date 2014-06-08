@@ -7,10 +7,10 @@ namespace Jasny\FormBuilder;
  * 
  * @option html Description is HTML so don't escape
  */
-class Button extends Node
+class Button extends Element
 {
     /**
-     * Element description
+     * FormElement description
      * @var string
      */
     protected $description = 'submit';
@@ -20,7 +20,7 @@ class Button extends Node
      * 
      * @param array $description  Description as displayed on the label 
      * @param array $attr         HTML attributes
-     * @param array $options      Element options
+     * @param array $options      FormElement options
      */
     public function __construct($description=null, array $attr=[], array $options=[])
     {
@@ -33,7 +33,7 @@ class Button extends Node
      * Set the description of the element.
      * 
      * @param string $description
-     * @return Element $this
+     * @return FormElement $this
      */
     public function setDescription($description)
     {

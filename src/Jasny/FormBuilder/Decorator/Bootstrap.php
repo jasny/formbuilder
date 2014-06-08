@@ -3,8 +3,8 @@
 namespace Jasny\FormBuilder\Decorator;
 
 use Jasny\FormBuilder\Decorator;
-use Jasny\FormBuilder\Node;
 use Jasny\FormBuilder\Element;
+use Jasny\FormBuilder\FormElement;
 use Jasny\FormBuilder\Button;
 use Jasny\FormBuilder\Input;
 
@@ -39,21 +39,21 @@ class Bootstrap extends Decorator
     /**
      * Apply default modifications.
      * 
-     * @param Node $node
+     * @param Element $element
      */
-    public function apply($node)
+    public function apply($element)
     {
-        if ($node instanceof Element) $node->addClass('form-control');
+        if ($element instanceof FormElement) $element->addClass('form-control');
         
-        $isButton = $node instanceof Button ||
-            ($node instanceof Input && in_array($node->attr['type'], ['button', 'submit', 'reset']));
-        if ($isButton && !$node->hasClass('btn')) $node->addClass('btn btn-default');
+        $isButton = $element instanceof Button ||
+            ($element instanceof Input && in_array($element->attr['type'], ['button', 'submit', 'reset']));
+        if ($isButton && !$element->hasClass('btn')) $element->addClass('btn btn-default');
     }
     
     /**
      * Modify options.
      * 
-     * @param Node  $element
+     * @param Element  $element
      * @param array $options
      * @return array
      */
@@ -75,12 +75,14 @@ class Bootstrap extends Decorator
     /**
      * Render a label bound to the control.
      * 
-     * @param Element $element
+     * @param FormElement $element
      * @param string  $html     Original rendered html
      * @return string
      */
     public function renderLabel($element, $html)
     {
+        if ($element instanceof Input && $element->attr['type'] === 'hidden') return $html;
+        
         $class = $element->getOption('container') ? ' class="control-label"' : '';
         
         return "<label{$class} for=\"" . $element->getId() . "\">"
@@ -92,7 +94,7 @@ class Bootstrap extends Decorator
     /**
      * Render the element container to HTML.
      * 
-     * @param Element $element
+     * @param FormElement $element
      * @param string  $html     Original rendered html
      * @param string  $label    HTML of the label
      * @param string  $field    HTML of the control
@@ -100,10 +102,12 @@ class Bootstrap extends Decorator
      */
     public function renderContainer($element, $html, $label, $field)
     {
+        if ($element instanceof Input && $element->attr['type'] === 'hidden') return $html;
+        
         $html = ($label ? $label . "\n" : '') . $field;
         
         // Add error
-        $error = $element instanceof Element ? $element->getError() : null;
+        $error = $element instanceof FormElement ? $element->getError() : null;
         if ($error) $html .= "\n<span class=\"help-block error\">{$error}</span>";
         
         // Put everything in a container

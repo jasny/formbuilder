@@ -18,29 +18,29 @@ abstract class Decorator
     /**
      * Called when decorator is added to element
      * 
-     * @param Node $node
+     * @param Element $element
      */
-    public function connect($node)
+    public function connect($element)
     {
     }
 
     /**
      * Apply default modifications.
      * 
-     * @param Node $node
+     * @param Element $element
      */
-    public function apply($node)
+    public function apply($element)
     {
     }
     
     /**
      * Modify options.
      * 
-     * @param Node  $node
+     * @param Element  $element
      * @param array $options
      * @return array
      */
-    public function applyToOptions($node, $options)
+    public function applyToOptions($element, $options)
     {
         return $options;
     }
@@ -49,11 +49,11 @@ abstract class Decorator
     /**
      * Check if element or group is valid.
      * 
-     * @param Node    $node
+     * @param Element    $element
      * @param boolean $valid
      * @return boolean
      */
-    public function isValid($node, $valid)
+    public function isValid($element, $valid)
     {
         return $valid;
     }
@@ -62,11 +62,11 @@ abstract class Decorator
     /**
      * Render to HTML
      * 
-     * @param Node   $node
+     * @param Element   $element
      * @param string $html  Original rendered html
      * @return string
      */
-    public function render($node, $html)
+    public function render($element, $html)
     {
         return $html;
     }
@@ -74,7 +74,7 @@ abstract class Decorator
     /**
      * Render a label bound to the element.
      * 
-     * @param Element $element
+     * @param FormElement $element
      * @param string  $html     Original rendered html
      * @return string
      */
@@ -86,7 +86,7 @@ abstract class Decorator
     /**
      * Render the element field to HTML.
      * 
-     * @param Element $element
+     * @param FormElement $element
      * @param string  $html     Original rendered html
      * @param string  $control  HTML of the control
      * @return string
@@ -99,7 +99,7 @@ abstract class Decorator
     /**
      * Render the element control to HTML.
      * 
-     * @param Element|Button $element
+     * @param FormElement|Button $element
      * @param string         $html     Original rendered html
      * @return string
      */
@@ -111,7 +111,7 @@ abstract class Decorator
     /**
      * Render the element container to HTML.
      * 
-     * @param Element|Button $element
+     * @param FormElement|Button $element
      * @param string         $html     Original rendered html
      * @param string         $label    HTML of the label
      * @param string         $control  HTML of the control

@@ -5,12 +5,12 @@ namespace Jasny\FormBuilder;
 /**
  * Base class of form control elements.
  */
-abstract class Control extends Node implements Element
+abstract class Control extends Element implements FormElement
 {
     use Validation;
     
     /**
-     * Element description
+     * FormElement description
      * @var string
      */
     protected $description;
@@ -28,7 +28,7 @@ abstract class Control extends Node implements Element
      * @param array $name
      * @param array $description  Description as displayed on the label 
      * @param array $attr         HTML attributes
-     * @param array $options      Node options
+     * @param array $options      Element options
      */
     public function __construct($name=null, $description=null, array $attr=[], array $options=[])
     {
@@ -76,7 +76,7 @@ abstract class Control extends Node implements Element
      * Set the name of the element.
      * 
      * @param string $name
-     * @return Element $this
+     * @return FormElement $this
      */
     public function setName($name)
     {
@@ -97,7 +97,7 @@ abstract class Control extends Node implements Element
      * Set the value of the element.
      * 
      * @param mixed $value
-     * @return Element $this
+     * @return FormElement $this
      */
     abstract public function setValue($value);
     
@@ -112,7 +112,7 @@ abstract class Control extends Node implements Element
      * Set the description of the element.
      * 
      * @param string $description
-     * @return Element $this
+     * @return FormElement $this
      */
     public function setDescription($description)
     {

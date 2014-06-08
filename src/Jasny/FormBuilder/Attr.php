@@ -15,7 +15,7 @@ class Attr extends \ArrayIterator
      */
     protected function cast($value)
     {
-        if ($value instanceof Element) $value = $value->getValue();
+        if ($value instanceof FormElement) $value = $value->getValue();
         if ($value instanceof \Closure) $value = $value();
         
         if ($value instanceof \DateTime) return $value->format('c');

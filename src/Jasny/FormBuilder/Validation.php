@@ -102,7 +102,7 @@ trait Validation
         $other = $this->getOption('match');
         if (!isset($other)) return true;
         
-        if (!$other instanceof Element) $other = $this->getForm()->getElement($other);
+        if (!$other instanceof FormElement) $other = $this->getForm()->getElement($other);
         
         if ($this->getValue() != $other->getValue()) {
             $this->setError($this->getOption('error:match'));
@@ -362,7 +362,7 @@ SCRIPT;
         $other = $this->getOption('match');
         if (!$other) return null;
         
-        if (!$other instanceof Element) $other = $this->getForm()->getElement($other);
+        if (!$other instanceof FormElement) $other = $this->getForm()->getElement($other);
         
         return "this.value == " . $this->castForScript($other);
     }
@@ -403,7 +403,7 @@ SCRIPT;
         
         $value = $this->resolvePlaceholder($var);
         
-        if ($value instanceof Element) {
+        if ($value instanceof FormElement) {
             $id = addcslashes($value->getId(), '"');
             return '" + document.getElementById("' . $id . '").value + "';
         }

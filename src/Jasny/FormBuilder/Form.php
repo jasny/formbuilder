@@ -17,7 +17,7 @@ class Form extends Group
      * Class constructor.
      * 
      * @param array $attrs    HTML attributes
-     * @param array $options  Element options
+     * @param array $options  FormElement options
      */
     public function __construct(array $attrs=array(), array $options=array())
     {

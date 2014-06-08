@@ -24,7 +24,7 @@ abstract class ChoiceControl extends Control
      * @param array $values       Key/value pairs for each choice
      * @param array $description  Description as displayed on the label 
      * @param array $attrs        HTML attributes
-     * @param array $options      Element options
+     * @param array $options      FormElement options
      */
     public function __construct($name=null, array $values=[], $description=null, array $attrs=[], array $options=[])
     {

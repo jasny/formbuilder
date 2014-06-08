@@ -8,7 +8,7 @@ namespace Jasny\FormBuilder;
  * @option boolean container  Wrap <a> in a <div>
  * @option boolean html       Consider content as HTML, so don't escape html entites
  */
-class Link extends Element
+class Link extends FormElement
 {
     /**
      * Link text
@@ -17,7 +17,7 @@ class Link extends Element
     protected $text;
     
     /**
-     * Element options 
+     * FormElement options 
      * @var array
      */
     protected $options = ['html'=>false];
@@ -28,7 +28,7 @@ class Link extends Element
      * 
      * @param string $text     Link text
      * @param array  $attrs    HTML attributes
-     * @param array  $options  Element options
+     * @param array  $options  FormElement options
      */
     public function __construct($text, array $attrs=[], array $options=[])
     {

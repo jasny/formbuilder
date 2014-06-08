@@ -48,21 +48,25 @@ class FormBuilder
         'button' => ['Jasny\FormBuilder\Button'],
         
         'choice' => ['Jasny\FormBuilder\Choice'],
+        'multi' => ['Jasny\FormBuilder\Choice', 'attr' => ['multiple'=>true]],
+        'hidden' => ['Jasny\FormBuilder\Hidden'],
         'input' => ['Jasny\FormBuilder\Input'],
         'select' => ['Jasny\FormBuilder\Select'],
         'textarea' => ['Jasny\FormBuilder\TextArea'],
 
-        'file' => ['Jasny\FormBuilder\Input', null, null, ['type'=>'file']],
-        'color' => ['Jasny\FormBuilder\Input', null, null, ['type'=>'color']],
-        'number' => ['Jasny\FormBuilder\Input', null, null, ['type'=>'number']],
-        'range' => ['Jasny\FormBuilder\Input', null, null, ['type'=>'range']],
-        'date' => ['Jasny\FormBuilder\Input', null, null, ['type'=>'date']],
-        'datetime' => ['Jasny\FormBuilder\Input', null, null, ['type'=>'datetime-local']],
-        'time' => ['Jasny\FormBuilder\Input', null, null, ['type'=>'time']],
-        'month' => ['Jasny\FormBuilder\Input', null, null, ['type'=>'month']],
-        'week' => ['Jasny\FormBuilder\Input', null, null, ['type'=>'week']],
-        'url' => ['Jasny\FormBuilder\Input', null, null, ['type'=>'url']],
-        'email' => ['Jasny\FormBuilder\Input', null, null, ['type'=>'email']],
+        'text' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'text']],
+        'file' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'file']],
+        'color' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'color']],
+        'number' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'number']],
+        'decimal' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'text', 'pattern'=>'-?\d+(\.\d+)?']],
+        'range' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'range']],
+        'date' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'date']],
+        'datetime' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'datetime-local']],
+        'time' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'time']],
+        'month' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'month']],
+        'week' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'week']],
+        'url' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'url']],
+        'email' => ['Jasny\FormBuilder\Input', 'attr' => ['type'=>'email']],
         
         'bootstrap/fileinput' => ['Jasny\FormBuilder\Bootstrap\Fileinput'],
         'bootstrap/imageinput' => ['Jasny\FormBuilder\Bootstrap\Imageinput'],
@@ -73,96 +77,91 @@ class FormBuilder
      * @var array
      */
     public static $decorators = [
-        'tidy' => 'Jasny\FormBuilder\Decorator\Tidy',
-        'bootstrap' => 'Jasny\FormBuilder\Decorator\Bootstrap'
+        'tidy' => ['Jasny\FormBuilder\Decorator\Tidy'],
+        'bootstrap' => ['Jasny\FormBuilder\Decorator\Bootstrap'],
+        'bootstrap3' => ['Jasny\FormBuilder\Decorator\Bootstrap', 'version'=>3]
     ];
+    
+    
+    /**
+     * Build an object using named arguments
+     * 
+     * @param string $class
+     * @param array  $args
+     * @param array  $defaults  Always named
+     * @return object
+     */
+    protected static function constructWithNamedArgs($class, array $args, array $defaults=[])
+    {
+        $refl = new \ReflectionClass($class);
+        $params = $refl->getMethod('__construct')->getParameters();
+        
+        $construct = []; // arguments for constructor
+        
+        foreach ($params as $param) {
+            $pn = $param->getName();
+            $pp = $param->getPosition();
+            
+            $value = isset($args[$pn]) ? $args[$pn] : (isset($args[$pp]) ? $args[$pp] : null);
+            
+            if (!isset($value)) {
+                $construct[$pp] = isset($defaults[$pn]) ? $defaults[$pn] : $param->getDefaultValue();
+            } elseif (isset($defaults[$pn]) && is_array($defaults[$pn]) && is_array($value)) {
+                $construct[$pp] = $value + $defaults[$pn];
+            } else {
+                $construct[$pp] = $value;
+            }
+        }
+        
+        return $refl->newInstanceArgs($construct);
+    }
     
     
     /**
      * General factory method
      * 
-     * @param string $type       'node' or 'decorator'
-     * @param array  $arguments  Arguments passes to the factory method
+     * @param string $type  'element' or 'decorator'
+     * @param string $name  Element / Decorator name
+     * @param array  $args  Arguments passed to the constructor
      * @return FormBuilder\Element|FormBuilder\Decorator
      */
-    public static function build($type, $arguments)
+    protected static function build($type, $name, $args=null)
     {
-        return call_user_func_array([get_called_class(), $type], $arguments);
-    }
-    
-    
-    /**
-     * Create a form node
-     * 
-     * @param string $name
-     * @param mixed  $...   Additional arguments are passed to the constructor
-     * @return FormBuilder\Node
-     */
-    public static function node($name)
-    {
-        if (!isset(self::$elements[$name])) throw new \Exception("Unable to build a $name node.");
+        switch ($type) {
+            case 'element': $items = static::$elements; break;
+            case 'decorator': $items = static::$decorators; break;
+            default: throw new \InvalidArgumentException("Type should be 'element' or 'decorator', not '$type'.");
+        }
         
-        $defaults = self::$elements[$name];
-
+        if (!isset($items[$name])) throw new \InvalidArgumentException("Unknown $type type '$name'.");
+        
+        $defaults = $items[$name];
         $class = array_shift($defaults);
-        $args = self::mergeArguments($defaults, array_slice(func_get_args(), 1));
         
-        $refl = new \ReflectionClass($class);
-        return $refl->newInstanceArgs($args);
+        return static::constructWithNamedArgs($class, $args, $defaults);
     }
     
     /**
-     * Alias of FormBuilder::node()
+     * Create a form element
      * 
-     * @param string $name
-     * @param mixed  $...   Additional arguments are passed to the constructor
-     * @return FormBuilder\Node
+     * @param string $name  Element name
+     * @param array  $args  Arguments passed to the constructor
+     * @return FormBuilder\Element
      */
-    final public static function element($name)
+    public static function buildElement($name, $args=null)
     {
-        return static::build('node', func_get_args());
+        return static::build('element', $name, $args);
     }
     
     /**
      * Create a form decorator
      * 
-     * @param string $name
-     * @param mixed  $...   Additional arguments are passed to the constructor
+     * @param string $name  Decorator name
+     * @param array  $args  Arguments passed to the constructor
      * @return FormBuilder\Decorator
      */
-    public static function decorator($name)
+    public static function buildDecorator($name, $args=null)
     {
-        if (!isset(self::$decorators[$name])) throw new \Exception("Unable to build a $name decorator.");
-        
-        $class = self::$decorators[$name];
-        $args = array_slice(func_get_args(), 1);
-        
-        $refl = new \ReflectionClass($class);
-        return $refl->newInstanceArgs($args);
-    }
-    
-    
-    /**
-     * Merge function arguments
-     * 
-     * @param array $defaults
-     * @param array $args
-     * @return array
-     */
-    protected static function mergeArguments($defaults, $args)
-    {
-        for ($i=0; $i < count($defaults); $i++) {
-            if (!isset($args[$i])) {
-                $args[$i] = $defaults[$i];
-            } elseif (is_array($defaults[$i]) || $defaults[$i] instanceof \stdClass) {
-                if (is_array($args[$i])) {
-                    $args[$i] = array_merge((array)$defaults[$i], $args[$i]);
-                } elseif ($args[$i] instanceof \stdClass) {
-                    $args[$i] = (object)array_merge((array)$defaults[$i], (array)$args[$i]);
-                }
-            }
-        }
-        
-        return $args;
+        return static::build('decorator', $name, $args);
     }
 }
