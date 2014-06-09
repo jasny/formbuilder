@@ -4,10 +4,12 @@ namespace Jasny\FormBuilder\Decorator;
 
 use Jasny\FormBuilder\Decorator;
 use Jasny\FormBuilder\Element;
-use Jasny\FormBuilder\FormElement;
+use Jasny\FormBuilder\Control;
+use Jasny\FormBuilder\Group;
 use Jasny\FormBuilder\Button;
 use Jasny\FormBuilder\Input;
 use Jasny\FormBuilder\Choice;
+use Jasny\FormBuilder\Action;
 
 /**
  * Render element for use with Bootstrap.
@@ -17,8 +19,6 @@ use Jasny\FormBuilder\Choice;
  * @link http://jasny.github.io/bootstrap
  * 
  * @option int version  Which major Bootstrap version is used
- * 
- * @todo Add classes for horizontal forms
  */
 class Bootstrap extends Decorator
 {
@@ -54,73 +54,153 @@ class Bootstrap extends Decorator
      */
     public function apply($element)
     {
-        if ($element instanceof FormElement && !$element instanceof Choice) {
+        // Add boostrap style class
+        if (static::isButton($element)) {
+            $element->addClass('btn btn-' . ($element->getOption('btn-style') ?: 'default'));
+        } elseif ($element instanceof Control && !$element instanceof Choice) {
             $element->addClass('form-control');
         }
+    }
+    
+    
+    /**
+     * Render prepend or append HTML.
+     * 
+     * @param Element $element
+     * @param string  $html     Original rendered html
+     * @return string
+     */
+    protected function renderAddon(Element $element, $html)
+    {
+        if (empty($html)) return $html;
         
-        $isButton = $element instanceof Button ||
-            ($element instanceof Input && in_array($element->attr['type'], ['button', 'submit', 'reset']));
-        if ($isButton && !$element->hasClass('btn')) $element->addClass('btn btn-default');
+        if ($element->hasClass('btn-labeled')) {
+            $html = '<span class="btn-label">' . $html . '</span>';
+        } elseif ($element instanceof Input && !static::isButton($element)) {
+            $html = '<span class="input-group-addon">' . $html . '</span>';
+        }
+        
+        return $html;
     }
     
     /**
-     * Modify options.
+     * Render prepend HTML.
      * 
-     * @param Element  $element
-     * @param array $options
-     * @return array
+     * @param Element $element
+     * @param string  $html     Original rendered html
+     * @return string
      */
-    public function applyToOptions($element, $options)
+    public function renderPrepend(Element $element, $html)
     {
-        if ($element instanceof Form) {
-            $form_inline = $element->hasClass('form-inline') || $element->hasClass('form-search');
-
-            return $options + [
-                'container' => !$form_inline,
-                'label' => !$form_inline
-            ];
-        }
-        
-        return $options;
+        return $this->renderAddon($element, $html);
+    }
+    
+    /**
+     * Render append HTML.
+     * 
+     * @param Element $element
+     * @param string  $html     Original rendered html
+     * @return string
+     */
+    public function renderAppend(Element $element, $html)
+    {
+        return $this->renderAddon($element, $html);
     }
     
     
     /**
      * Render a label bound to the control.
      * 
-     * @param FormElement $element
+     * @param Element $element
      * @param string  $html     Original rendered html
      * @return string
      */
-    public function renderLabel($element, $html)
+    public function renderLabel(Element $element, $html)
     {
         if ($element instanceof Input && $element->attr['type'] === 'hidden') return $html;
         
-        $class = $element->getOption('container') ? ' class="control-label"' : '';
+        $class = $element->getOption('container') ? 'control-label' : '';
+
+        $grid = $element->getOption('grid');
+        if ($grid && $element->getOption('container')) {
+            $class = ltrim($class . " " . $grid['label']);
+        }
         
-        return "<label{$class} for=\"" . $element->getId() . "\">"
+        $required = $element instanceof Control && $element->getAttr('required') ?
+            $element->getOption('required-suffix') : '';
+        
+        if ($class) $class = 'class="' . $class . '"';
+        return "<label {$class} for=\"" . $element->getId() . "\">"
             . $element->getDescription()
-            . ($element->getAttr('required') ? $element->getOption('required-suffix') : '')
+            . $required
             . "</label>";
     }
     
     /**
+     * Render the content of the element control to HTML.
+     * 
+     * @param Element $element
+     * @param string  $html     Original rendered html
+     * @return string
+     */
+    public function renderContent(Element $element, $html)
+    {
+        if ($element->hasClass('btn-labeled')) {
+            $html = $element->getPrepend() . $html . $element->getAppend();
+        }
+        
+        return $html;
+    }
+    
+    /**
+     * Render the element control to HTML.
+     * 
+     * @param Element $element
+     * @param string  $html     Original rendered html
+     * @param string  $el       HTML element
+     * @return string
+     */
+    public function renderControl(Element $element, $html, $el)
+    {
+        if ($element->hasClass('btn-labeled')) $html = $el;
+        
+        // Input group for prepend/append
+        $useInputGroup = $element instanceof Input && !self::isButton($element) &&
+            ($element->getOption('prepend') != '' || $element->getOption('append') != '') &&
+            $element->getOption('label') !== 'inside';
+        
+        if ($useInputGroup) $html = '<div class="input-group">' . "\n" . $html . "\n</div>";
+        
+        // Grid for horizontal form
+        $grid = $element->getOption('grid');
+        if ($grid && $element->getOption('container') && !$element instanceof Group) {
+            $class = $grid['control'];
+            if ($element->getOption('label') !== true) {
+                $class .= " " . preg_replace('/-(\d+)\b/', '-offset-$1', $grid['label']);
+            }
+            $html = '<div class="' . $class . '">' . "\n" . $html . "\n</div>";
+        }
+        
+        return $html;
+    }
+
+    /**
      * Render the element container to HTML.
      * 
-     * @param FormElement $element
+     * @param BaseControl $element
      * @param string  $html     Original rendered html
      * @param string  $label    HTML of the label
      * @param string  $field    HTML of the control
      * @return string
      */
-    public function renderContainer($element, $html, $label, $field)
+    public function renderContainer(Element $element, $html, $label, $field)
     {
-        if ($element instanceof Input && $element->attr['type'] === 'hidden') return $html;
+        if (!$element->getOption('container')) return $html;
         
         $html = ($label ? $label . "\n" : '') . $field;
         
         // Add error
-        $error = $element instanceof FormElement ? $element->getError() : null;
+        $error = $element instanceof BaseControl ? $element->getError() : null;
         if ($error) $html .= "\n<span class=\"help-block error\">{$error}</span>";
         
         // Put everything in a container
@@ -130,5 +210,21 @@ class Bootstrap extends Decorator
         }
         
         return $html;
+    }
+    
+    
+    /**
+     * Check if element is a button
+     * 
+     * @param Element $element
+     * @return boolean
+     */
+    protected static function isButton($element)
+    {
+        return
+            $element instanceof Button ||
+            ($element instanceof Input && in_array($element->attr['type'], ['button', 'submit', 'reset'])) ||
+            $element->hasClass('btn') ||
+            $element->getOption('btn-style');
     }
 }

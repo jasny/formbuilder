@@ -53,11 +53,8 @@ class Hyperlink extends Action
      * 
      * @return string
      */
-    protected function renderControl()
+    protected function renderElement()
     {
-        $content = $this->getContent();
-        if ($this->getOption('escape')) $content = htmlentities($content);
-        
-        return "<a {$this->attr}>$content</a>";
+        return "<a {$this->attr}>" . $this->getContent() . "</a>";
     }
 }

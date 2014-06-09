@@ -7,7 +7,7 @@ use Jasny\FormBuilder;
 /**
  * Base class for an HTML child with children.
  */
-abstract class Group extends Element
+class Group extends Element
 {
     /**
      * The HTML tag name.
@@ -21,21 +21,16 @@ abstract class Group extends Element
      */
     protected $children = [];
     
-    
+
     /**
-     * Apply modifications by decorator
+     * Class constructor.
      * 
-     * @param Decorator $decorator
+     * @param array $options  Element options
+     * @param array $attr     HTML attributes
      */
-    protected function applyDecorator(Decorator $decorator)
+    public function __construct(array $options = array(), array $attr = array())
     {
-        parent::applyDecorator($decorator);
-        
-        if ($decorator->isDeep()) {
-            foreach ($this->children as $child) {
-                if ($child instanceof Element) $child->applyDecorator($decorator);
-            }
-        }
+        parent::__construct($options, $attr);
     }
     
     
@@ -45,7 +40,7 @@ abstract class Group extends Element
      * @param string $element
      * @param array  $options  Element options
      * @param array  $attr     HTML attributes
-     * @return FormBuilder\Element|FormBuilder\FormElement
+     * @return FormBuilder\Element|FormBuilder\Control
      */
     protected function build($element, array $options=[], array $attr=[])
     {
@@ -68,10 +63,6 @@ abstract class Group extends Element
         }
         
         if ($child instanceof Element) $child->parent = $this;
-        
-        foreach ($this->getDecorators() as $decorator) {
-            if ($decorator->isDeep()) $child->applyDecorator($decorator);
-        }
         
         $this->children[] = $child;
         return $this;
@@ -128,7 +119,7 @@ abstract class Group extends Element
             if (isset($id) && $child->getId() === $id) {
                 $found = $child;
                 if ($unlink) unset($this->children[$i]);
-            } elseif (isset($name) && $child instanceof FormElement && $child->getName() == $name) {
+            } elseif (isset($name) && $child instanceof Control && $child->getName() == $name) {
                 $found = $child;
                 if ($unlink) unset($this->children[$i]);
             } elseif ($child instanceof Group) {
@@ -155,14 +146,14 @@ abstract class Group extends Element
     /**
      * Get all the form elements in the group (deep search).
      * 
-     * @return FormElement[]
+     * @return Control[]
      */
     public function getElements()
     {
         $elements = array();
         
         foreach ($this->children as $child) {
-            if ($child instanceof FormElement) {
+            if ($child instanceof Control) {
                 $name = $child->getName();
                 if ($name) {
                     $elements[$name] = $child;
@@ -244,20 +235,59 @@ abstract class Group extends Element
     
     /**
      * Render the opening tag
+     * 
+     * @return string
      */
     public function open()
     {
-        return "<" . $this->tagname . rtrim(' ' . $this->attr) . ">";
+        $this->applyDecorators();
+        return !empty($this->tagname) ? "<{$this->tagname} {$this->attr}>" : null;
     }
 
     /**
      * Render the closing tag
+     * 
+     * @return string
      */
     public function close()
     {
-        return "</" . $this->tagname . ">";
+        return !empty($this->tagname) ? "</{$this->tagname}>" : null;
     }
-
+    
+    
+    /**
+     * Get content of the element.
+     * 
+     * @return string
+     */
+    final public function getContent()
+    {
+        $content = $this->renderContent();
+        
+        foreach ($this->getDecorators() as $decorator) {
+            $content = $decorator->renderContent($this, $content);
+        }
+        
+        return $content;
+    }
+    
+    /**
+     * Render the content of the HTML element.
+     * 
+     * @return string
+     */
+    protected function renderContent()
+    {
+        $items = [];
+        
+        foreach ($this->children as $child) {
+            if (!isset($child) || ($child instanceof Element && !$child->getOption('render'))) continue;
+            $items[] = (string)$child;
+        }
+        
+        return join("\n", $items);
+    }
+    
     /**
      * Render the child to HTML.
      * 
@@ -265,15 +295,6 @@ abstract class Group extends Element
      */
     protected function render()
     {
-        $html = $this->open() . "\n";
-        
-        foreach ($this->children as $child) {
-            if (!isset($child) || ($child instanceof Element && !$child->getOption('render'))) continue;
-            $html .= (string)$child . "\n";
-        }
-        
-        $html .= $this->close();
-        
-        return $html;
+        return $this->open() . "\n" . $this->getContent() . "\n" . $this->close();
     }
 }

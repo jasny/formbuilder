@@ -72,18 +72,17 @@ abstract class Element
         $decorator->connect($this);
         $this->decorators[] = $decorator;
         
-        $this->applyDecorator($decorator);
         return $this;
     }
 
     /**
-     * Apply modifications by decorator
-     * 
-     * @param Decorator $decorator
+     * Apply modifications by decorators
      */
-    protected function applyDecorator(Decorator $decorator)
+    protected function applyDecorators()
     {
-        $decorator->apply($this);
+        foreach ($this->getDecorators() as $decorator) {
+            $decorator->apply($this);
+        }
     }
     
     /**
@@ -215,9 +214,9 @@ abstract class Element
      * @param string $class
      * @return boolean
      */
-    public function hasClass($class)
+    final public function hasClass($class)
     {
-        return isset($this->attr['class']) && in_array($class, explode(' ', $this->attr['class']));
+        return $this->attr->hasClass($class);
     }
     
     /**
@@ -226,21 +225,10 @@ abstract class Element
      * @param string|array $class  Multiple classes may be specified as array or using a space
      * @return Element $this
      */
-    public function addClass($class)
+    final public function addClass($class)
     {
-        $attr = $this->attr['class'];
-        
-        if (!isset($this->attr['class'])) {
-            $this->attr['class'] = is_array($class) ? join(' ', $class) : $class;
-        } else {
-            $classes = is_array($class) ? $class : explode(' ', $class);
-            
-            foreach ($classes as $class) {
-                if (!$this->hasClass($class)) $attr .= ' ' . $class;
-            }
-        }
-        
-        return $attr;
+        $this->attr->addClass($class);
+        return $this;
     }
     
     /**
@@ -251,14 +239,8 @@ abstract class Element
      */
     public function removeClass($class)
     {
-        if (isset($this->attr['class'])) {
-            $current = explode(" ", $this->attr['class']);
-            $remove = explode(" ", $class);
-
-            $attribute = join(' ', array_diff($current, $remove));
-        }
-        
-        return $attribute;
+        $this->attr->removeClass($class);
+        return $this;
     }
     
     
@@ -291,12 +273,17 @@ abstract class Element
     /**
      * Get an option.
      * 
+     * @param string $option
      * @return mixed
      */
-    final public function getOption($option)
+    public function getOption($option)
     {
-        $options = $this->getOptions();
-        return isset($options[$option]) ? $options[$option] : null;
+        if (isset($this->options[$option])) return $this->options[$option];
+        
+        if (isset($this->parent)) return $this->parent->getOption($option, true);
+        if (isset(FormBuilder::$options[$option])) return FormBuilder::$options[$option];
+        
+        return null; // not found
     }
         
     /**
@@ -309,11 +296,6 @@ abstract class Element
     {
         $defaults = isset($this->parent) ? $this->parent->getOptions() : FormBuilder::$options;
         $options = $this->options + $defaults;
-
-        // Apply changes to optoins
-        foreach ($this->getDecorators() as $decorator) {
-            $options = $decorator->applyToOptions($this, $options);
-        }
         
         return $options;
     }
@@ -358,6 +340,8 @@ abstract class Element
      */
     final public function toHTML()
     {
+        $this->applyDecorators();
+        
         $html = $this->render();
         
         foreach ($this->getDecorators() as $decorator) {
@@ -403,7 +387,7 @@ abstract class Element
         $value = $this->getOption($var);
         if (!isset($value)) $value = $this->getAttr($var);
         
-        if ($value instanceof FormElement) return $value->getValue();
+        if ($value instanceof Control) return $value->getValue();
         if ($value instanceof \DateTime) return strftime('%x', $value->getTimestamp());
         return (string)$value;
     }

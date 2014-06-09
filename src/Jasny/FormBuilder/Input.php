@@ -13,7 +13,7 @@ namespace Jasny\FormBuilder;
  * 
  * @todo Support multiple file upload
  */
-class Input extends Control
+class Input extends BaseControl
 {
     /**
      * Upload data. Only used for <input type="file">.
@@ -33,7 +33,7 @@ class Input extends Control
         if (isset($options['value'])) $attr['value'] = $options['value'];
         if (isset($options['type'])) $attr['type'] = $options['type'];
         $attr += $this->attr + ['type'=>'text'];
-        
+
         if ($attr['type'] === 'checkbox' && !isset($attr['value'])) $attr['value'] = 1;
 
         if (in_array($attr['type'], ['button', 'submit', 'reset']) && !isset($attr['value'])) {
@@ -49,8 +49,38 @@ class Input extends Control
             };
         }
         
+        $options += $this->getDefaultOptions($attr['type']);
+        
         unset($options['type'], $options['value']);
         parent::__construct($options, $attr);
+    }
+    
+    /**
+     * Get default options for a specific type
+     */
+    protected function getDefaultOptions($type)
+    {
+        $options = [];
+        
+        switch ($type) {
+            case 'hidden':
+                if (!isset($this->options['label'])) $options['label'] = false;
+                if (!isset($this->options['container'])) $options['container'] = false;
+                break;
+            
+            case 'checkbox':
+            case 'radio':
+                if (!isset($this->options['label'])) $options['label'] = 'inside';
+                break;
+                
+            case 'button':
+            case 'submit':
+            case 'reset':
+                if (!isset($this->options['label'])) $options['label'] = false;
+                break;
+        }
+        
+        return $options;
     }
     
     
@@ -75,7 +105,7 @@ class Input extends Control
         if ($type === 'file') return $this->upload;
         
         $value = $this->attr['value'];
-        if ($value instanceof FormElement) $value = $value->getValue();
+        if ($value instanceof Control) $value = $value->getValue();
 
         if (($type === 'checkbox' || $type === 'radio') && !$this->attr['checked']) $value = false;
         
@@ -86,7 +116,7 @@ class Input extends Control
      * Set the value of the control.
      * 
      * @param mixed $value
-     * @return Boostrap/Control $this
+     * @return Boostrap/BaseControl $this
      */
     public function setValue($value)
     {
@@ -107,36 +137,6 @@ class Input extends Control
         }
         
         return $this;
-    }
-
-    /**
-     * Get all options.
-     * 
-     * @return array
-     */
-    public function getOptions()
-    {
-        $options = parent::getOptions();
-        
-        switch ($this->attr['type']) {
-            case 'hidden':
-                if (!isset($this->options['label'])) $options['label'] = false;
-                if (!isset($this->options['container'])) $options['container'] = false;
-                break;
-            
-            case 'checkbox':
-            case 'radio':
-                if (!isset($this->options['label'])) $options['label'] = 'inside';
-                break;
-                
-            case 'button':
-            case 'submit':
-            case 'reset':
-                if (!isset($this->options['label'])) $options['label'] = false;
-                break;
-        }
-        
-        return $options;
     }
     
     
@@ -169,18 +169,18 @@ class Input extends Control
     /**
      * Render the element field to HTML.
      * 
-     * @param string $control  Control HTML
+     * @param string $el  HTML element
      * @return string
      */
-    protected function renderField($control)
+    protected function renderControl($el)
     {
         // Determine default options and attributes
-        if ($this->attr['type'] == 'checkbox' && $this->getOption('add-hidden')) {
+        if ($this->attr['type'] === 'checkbox' && $this->getOption('add-hidden')) {
             $name = htmlentities($this->attr['name']);
-            $control = '<input type="hidden" name="' . $name . '" value="">' . $control;
+            $el = '<input type="hidden" name="' . $name . '" value="">' . "\n" . $el;
         }
 
-        return parent::renderField($control);
+        return parent::renderControl($el);
     }
 
     /**
@@ -188,7 +188,7 @@ class Input extends Control
      * 
      * @return string
      */
-    protected function renderControl()
+    protected function renderElement()
     {
         return "<input {$this->attr}>";
     }

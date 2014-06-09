@@ -16,11 +16,8 @@ class Button extends Action
      * 
      * @return string
      */
-    protected function renderControl()
+    protected function renderElement()
     {
-        $content = $this->getContent();
-        if ($this->getOption('escape')) $content = htmlentities($content);
-        
-        return "<button {$this->attr}>$content</button>";
+        return "<button {$this->attr}>" . $this->getContent() . "</button>";
     }
 }

@@ -20,27 +20,27 @@ abstract class Decorator
      * 
      * @param Element $element
      */
-    public function connect($element)
+    public function connect(Element $element)
     {
     }
 
     /**
-     * Apply default modifications.
+     * Apply modifications.
      * 
      * @param Element $element
      */
-    public function apply($element)
+    public function apply(Element $element)
     {
     }
     
     /**
      * Modify options.
      * 
-     * @param Element  $element
-     * @param array $options
+     * @param Element $element
+     * @param array   $options
      * @return array
      */
-    public function applyToOptions($element, $options)
+    public function applyToOptions(Element $element, $options)
     {
         return $options;
     }
@@ -49,11 +49,11 @@ abstract class Decorator
     /**
      * Check if element or group is valid.
      * 
-     * @param Element    $element
+     * @param Element $element
      * @param boolean $valid
      * @return boolean
      */
-    public function isValid($element, $valid)
+    public function isValid(Element $element, $valid)
     {
         return $valid;
     }
@@ -62,11 +62,35 @@ abstract class Decorator
     /**
      * Render to HTML
      * 
-     * @param Element   $element
-     * @param string $html  Original rendered html
+     * @param Element $element
+     * @param string  $html     Original rendered html
      * @return string
      */
-    public function render($element, $html)
+    public function render(Element $element, $html)
+    {
+        return $html;
+    }
+    
+    /**
+     * Render prepend HTML.
+     * 
+     * @param Element $element
+     * @param string  $html     Original rendered html
+     * @return string
+     */
+    public function renderPrepend(Element $element, $html)
+    {
+        return $html;
+    }
+    
+    /**
+     * Render append HTML.
+     * 
+     * @param Element $element
+     * @param string  $html     Original rendered html
+     * @return string
+     */
+    public function renderAppend(Element $element, $html)
     {
         return $html;
     }
@@ -74,36 +98,36 @@ abstract class Decorator
     /**
      * Render a label bound to the element.
      * 
-     * @param FormElement $element
+     * @param Element $element
      * @param string  $html     Original rendered html
      * @return string
      */
-    public function renderLabel($element, $html)
+    public function renderLabel(Element $element, $html)
     {
         return $html;
     }
     
     /**
-     * Render the element field to HTML.
+     * Render the content of the element control to HTML.
      * 
-     * @param FormElement $element
+     * @param Element $element
      * @param string  $html     Original rendered html
-     * @param string  $control  HTML of the control
      * @return string
      */
-    public function renderField($element, $html, $control)
+    public function renderContent(Element $element, $html)
     {
         return $html;
     }
-
+    
     /**
      * Render the element control to HTML.
      * 
-     * @param FormElement|Button $element
-     * @param string         $html     Original rendered html
+     * @param Element $element
+     * @param string  $html     Original rendered html
+     * @param string  $el       HTML element
      * @return string
      */
-    public function renderControl($element, $html)
+    public function renderControl(Element $element, $html, $el)
     {
         return $html;
     }
@@ -111,13 +135,13 @@ abstract class Decorator
     /**
      * Render the element container to HTML.
      * 
-     * @param FormElement|Button $element
-     * @param string         $html     Original rendered html
-     * @param string         $label    HTML of the label
-     * @param string         $control  HTML of the control
+     * @param Element $element
+     * @param string  $html     Original rendered html
+     * @param string  $label    HTML of the label
+     * @param string  $control  HTML of the control
      * @return string
      */
-    public function renderContainer($element, $html, $label, $control)
+    public function renderContainer(Element $element, $html, $label, $control)
     {
         return $html;
     }

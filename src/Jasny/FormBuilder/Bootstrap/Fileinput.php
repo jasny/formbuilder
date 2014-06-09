@@ -9,7 +9,7 @@ use Jasny\FormBuilder as Base;
  * 
  * @link http://jasny.github.io/bootstrap/javascript/#fileinput
  */
-class Fileinput extends Base\Control
+class Fileinput extends Base\BaseControl
 {
     static public $buttons = array(
         'select' => "Select file",
@@ -29,7 +29,7 @@ class Fileinput extends Base\Control
      * @param array $name
      * @param array $description  Description as displayed on the label 
      * @param array $attrs        HTML attributes
-     * @param array $options      FormElement options
+     * @param array $options      Control options
      */
     public function __construct($name=null, $description=null, array $attrs=[], array $options=[])
     {
@@ -104,7 +104,7 @@ class Fileinput extends Base\Control
      * Set the name of the element.
      * 
      * @param string $name
-     * @return FormElement $this
+     * @return Control $this
      */
     public function setName($name)
     {
@@ -164,7 +164,7 @@ class Fileinput extends Base\Control
      * 
      * @return string
      */
-    protected function generateControl()
+    protected function generateBaseControl()
     {
         $options = $this->getOptions();
         

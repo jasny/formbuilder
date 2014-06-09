@@ -19,6 +19,7 @@ class FormBuilder
         'required-suffix' => ' *',     // Suffix label for required controls
         'container' => true,           // Place each form element in a container
         'label' => true,               // Add a label for each form element
+        'inside-label'=>false,         // Put element inside a label
         
         'error:required' => "Please fill out this field",
         'error:type' => "Please enter a {{type}}",
@@ -45,11 +46,14 @@ class FormBuilder
      * @var array
      */
     public static $elements = [
+        'div' =>      ['Jasny\FormBuilder\Div'],
         'form' =>     ['Jasny\FormBuilder\Form'],
         'fieldset' => ['Jasny\FormBuilder\Fieldset'],
-        'link' =>     ['Jasny\FormBuilder\Hyperlink'],
-        'button' =>   ['Jasny\FormBuilder\Button'],
+        'group' =>    ['Jasny\FormBuilder\Group'],
         
+        'button' =>   ['Jasny\FormBuilder\Button'],
+        'link' =>     ['Jasny\FormBuilder\Hyperlink'],
+            
         'choice' =>   ['Jasny\FormBuilder\Choice'],
         'multi' =>    ['Jasny\FormBuilder\Choice', ['multiple'=>true]],
         'input' =>    ['Jasny\FormBuilder\Input'],
@@ -92,7 +96,7 @@ class FormBuilder
      * @param string $name     Element name
      * @param array  $options  Element options
      * @param array  $attr     HTML attributes
-     * @return FormBuilder\Element|FormBuilder\FormElement
+     * @return FormBuilder\Element|FormBuilder\Control
      */
     public static function element($name, array $options=[], array $attr=[])
     {

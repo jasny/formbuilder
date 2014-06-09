@@ -15,7 +15,7 @@ class Attr extends \ArrayIterator
      */
     protected function cast($value)
     {
-        if ($value instanceof FormElement) $value = $value->getValue();
+        if ($value instanceof Control) $value = $value->getValue();
         if ($value instanceof \Closure) $value = $value();
         
         if ($value instanceof \DateTime) return $value->format('c');
@@ -105,6 +105,64 @@ class Attr extends \ArrayIterator
         }
 
         return $attrs;
+    }
+
+    
+    /**
+     * Check if class is present
+     * 
+     * @param string $class
+     * @return boolean
+     */
+    public function hasClass($class)
+    {
+        $attribute = $this->getOne('class');
+        return $attribute && in_array($class, explode(' ', $attribute));
+    }
+    
+    /**
+     * Add a class
+     * 
+     * @param string|array $class  Multiple classes may be specified as array or using a space
+     * @return Attr $this
+     */
+    public function addClass($class)
+    {
+        $attribute = $this->getOne('class');
+        
+        if (!$attribute) {
+            $this->set('class', is_array($class) ? join(' ', $class) : $class);
+        } else {
+            $classes = is_array($class) ? $class : explode(' ', $class);
+            
+            foreach ($classes as $class) {
+                if (!$this->hasClass($class)) $attribute .= ' ' . $class;
+            }
+            
+            $this->set('class', $attribute);
+        }
+        
+        return $this;
+    }
+    
+    /**
+     * Remove a class
+     * 
+     * @param string|array $class  Multiple classes may be specified as array or using a space
+     * @return Attr $this
+     */
+    public function removeClass($class)
+    {
+        $attribute = $this->getOne('class');
+        
+        if ($attribute) {
+            $current = explode(" ", $attribute);
+            $remove = explode(" ", $class);
+
+            $this->set('class', join(' ', array_diff($current, $remove)));
+        }
+        
+        return $this;
     }
     
     

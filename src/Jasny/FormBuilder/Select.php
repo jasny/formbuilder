@@ -11,11 +11,11 @@ namespace Jasny\FormBuilder;
 class Select extends ChoiceControl
 {
     /**
-     * Render the <select>
+     * Render the content of the HTML element.
      * 
      * @return string
      */
-    protected function renderControl()
+    protected function renderContent()
     {
         $selected_first = (boolean)$this->getOption('selected-first');
         
@@ -30,10 +30,16 @@ class Select extends ChoiceControl
              else $opts[] = $opt;
         }
         
-        $html = "<select {$this->attr}>\n"
-            . join("\n", array_merge($opts_first, $opts))
-            . "</select>\n";
-        
-        return $this->renderContainer($html);
+        return join("\n", array_merge($opts_first, $opts));
+    }
+    
+    /**
+     * Render the <select>
+     * 
+     * @return string
+     */
+    protected function renderElement()
+    {
+        return "<select {$this->attr}>\n" . $this->getContent() . "\n</select>";
     }
 }

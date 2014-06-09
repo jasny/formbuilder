@@ -11,7 +11,7 @@ namespace Jasny\FormBuilder;
  * @option type         HTML5 input type
  * @option value        Element value
  */
-class Textarea extends Control
+class Textarea extends BaseControl
 {
     /**
      * @var string
@@ -52,7 +52,7 @@ class Textarea extends Control
      * Set the value of the control.
      * 
      * @param string $value
-     * @return Boostrap/Control $this
+     * @return Boostrap/BaseControl $this
      */
     public function setValue($value)
     {
@@ -86,7 +86,7 @@ class Textarea extends Control
      * 
      * @return string
      */
-    protected function renderControl()
+    protected function renderElement()
     {
         return "<textarea {$this->attr}>" . $this->getValue() . "</textarea>";
     }

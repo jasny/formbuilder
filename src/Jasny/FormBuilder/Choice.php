@@ -11,11 +11,11 @@ namespace Jasny\FormBuilder;
 class Choice extends ChoiceControl
 {
     /**
-     * Render the input control to HTML.
+     * Render the content of the HTML element.
      * 
      * @return string
      */
-    protected function renderControl()
+    protected function renderContent()
     {
         $this->getId();
         $name = $this->getAttr('name');
@@ -34,9 +34,8 @@ class Choice extends ChoiceControl
                 $selected = (string)$key === (string)$this->value;
             }
             
-            $html_attrs = "type=\"$type\" name=\"" . htmlentities($name) . "\""
-                . "value=\"" . htmlentities($key) . "\""
-                . ($selected ? ' checked' : '');
+            $html_attrs = 'type="' . $type . '" name="' . htmlentities($name) . '"'
+                . 'value="' . htmlentities($key) . '"' . ($selected ? ' checked' : '');
             $input = "<label><input $html_attrs> " . htmlentities($val) . "</label>";
             
             if (!$single_line) $input = '<div>' . $input . '</div>';
@@ -48,10 +47,20 @@ class Choice extends ChoiceControl
         $hidden = $type === 'checkbox' && $this->getOption('add-hidden') ?
             '<input type="hidden" name="' . htmlentities($this->getName()) . '" value="">' . "\n" : '';
         
+        return $hidden . join("\n", array_merge($inputs_first, $inputs));
+    }
+    
+    /**
+     * Render the input control to HTML.
+     * 
+     * @return string
+     */
+    protected function renderElement()
+    {
+        
         // Build html control
         return "<div " . $this->attr->render(['name'=>null, 'multiple'=>null]) . ">\n"
-            . $hidden
-            . join("\n", array_merge($inputs_first, $inputs)) . "\n"
+            . $this->getContent() . "\n"
             . "</div>";
     }
 }
