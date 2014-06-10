@@ -15,28 +15,6 @@ interface Control
     public function getForm();
 
     /**
-     * Get control identifier.
-     * 
-     * @return string
-     */
-    public function getId();
-
-    /**
-     * Set the name of the element.
-     * 
-     * @param string $name
-     * @return Control $this
-     */
-    public function setName($name);
-    
-    /**
-     * Get the name of the element.
-     * 
-     * @return string
-     */
-    public function getName();
-    
-    /**
      * Set the value of the element.
      * 
      * @param mixed $value

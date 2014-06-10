@@ -37,15 +37,15 @@ class Group extends Element
     /**
      * Factory method
      * 
-     * @param string $element
+     * @param string $type     Element type
      * @param array  $options  Element options
      * @param array  $attr     HTML attributes
      * @return FormBuilder\Element|FormBuilder\Control
      */
-    protected function build($element, array $options=[], array $attr=[])
+    protected function build($type, array $options=[], array $attr=[])
     {
-        if ($this->parent) return $this->parent->build($element, $options, $attr);
-        return FormBuilder::element($element, $options, $attr);
+        if ($this->parent) return $this->parent->build($type, $options, $attr);
+        return FormBuilder::element($type, $options, $attr);
     }
     
     /**
@@ -119,7 +119,7 @@ class Group extends Element
             if (isset($id) && $child->getId() === $id) {
                 $found = $child;
                 if ($unlink) unset($this->children[$i]);
-            } elseif (isset($name) && $child instanceof Control && $child->getName() == $name) {
+            } elseif (isset($name) && $child->getName() == $name) {
                 $found = $child;
                 if ($unlink) unset($this->children[$i]);
             } elseif ($child instanceof Group) {

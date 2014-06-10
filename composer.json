@@ -25,7 +25,8 @@
     },
     "autoload": {
         "psr-0": {
-            "Jasny\\FormBuilder": "src/"
+            "Jasny\\FormBuilder": "src/",
+            "Jasny\\FormGenerator": "src/"
         }
     }
 }

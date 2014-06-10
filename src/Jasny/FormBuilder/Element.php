@@ -49,7 +49,8 @@ abstract class Element
     public function __construct(array $options=[], array $attr=[])
     {
         if (isset($options['id'])) $attr['id'] = $options['id'];
-        unset($options['id']);
+        if (isset($options['name'])) $attr['name'] = $options['name'];
+        unset($options['id'], $options['name']);
         
         $this->attr = new Attr($attr + $this->attr);
         $this->options = array_merge($this->options, $options);
@@ -180,6 +181,27 @@ abstract class Element
         }
         
         return $this->attr['id'];
+    }
+    
+    /**
+     * Set the name of the element.
+     * 
+     * @param string $name
+     * @return Control $this
+     */
+    public function setName($name)
+    {
+        return $this->attr['name'] = $name;
+    }
+    
+    /**
+     * Return the name of the control.
+     * 
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->attr['name'];
     }
     
     /**
