@@ -60,6 +60,7 @@ class FormBuilder
         'select' =>   ['Jasny\FormBuilder\Select'],
         'textarea' => ['Jasny\FormBuilder\Textarea'],
 
+        'boolean' =>  ['Jasny\FormBuilder\Input', ['type'=>'checkbox']],
         'text' =>     ['Jasny\FormBuilder\Input', ['type'=>'text']],
         'hidden' =>   ['Jasny\FormBuilder\Input', ['type'=>'hidden']],
         'file' =>     ['Jasny\FormBuilder\Input', ['type'=>'file']],
