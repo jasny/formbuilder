@@ -164,7 +164,7 @@ class Fileinput extends Base\BaseControl
      * 
      * @return string
      */
-    protected function generateBaseControl()
+    protected function renderElement()
     {
         $options = $this->getOptions();
         
@@ -181,9 +181,9 @@ class Fileinput extends Base\BaseControl
         
         $attr_html = $this->attr->render(['name'=>null, 'multiple'=>null]);
 
-        $preview = $this->generatePreview($value, $options);
-        $button_select = $this->generateSelectButton($options);
-        $button_remove = $this->generateRemoveButton($options);
+        $preview = $this->renderPreview($value, $options);
+        $button_select = $this->renderSelectButton($options);
+        $button_remove = $this->renderRemoveButton($options);
         
         $html = <<<HTML
 <div{$attr_html} data-provides="fileupload">
@@ -196,7 +196,13 @@ HTML;
         return $html;
     }
     
-    protected function generatePreview($value, $options)
+    /**
+     * Render the preview for existing files
+     * 
+     * @param string $value
+     * @return string
+     */
+    protected function renderPreview($value)
     {
         return <<<HTML
 <i class="icon-file fileupload-exists"></i> <span class="fileupload-preview">$value</span>
@@ -206,15 +212,14 @@ HTML;
     /**
      * Render the select button
      * 
-     * @param array $options
      * @return string
      */
-    protected function generateSelectButton($options)
+    protected function renderSelectButton()
     {
         $attr = $this->attr->renderOnly(['name', 'multiple']);
         
-        $button_select = htmlentities($options['buttons']['select']);
-        $button_change = htmlentities($options['buttons']['change']);
+        $button_select = htmlentities($this->getOption('select-button'));
+        $button_change = htmlentities($this->getOption('change-button'));
         
         return <<<HTML
 <span class="btn btn-file"><span class="fileupload-new">$button_select</span><span class="fileupload-exists">$button_change</span><input type="file" $attr /></span> 
@@ -224,12 +229,12 @@ HTML;
     /**
      * Render the remove button
      * 
-     * @param array $options
      * @return string
      */
-    protected function generateRemoveButton($options)
+    protected function renderRemoveButton()
     {
-        $button_remove = htmlentities($options['buttons']['remove']);
+        $button_remove = htmlentities($this->getOption('remove-button'));
+        if (!$button_remove) return null;
         
         return <<<HTML
 <button class="btn fileupload-exists" data-dismiss="fileupload">$button_remove</button>

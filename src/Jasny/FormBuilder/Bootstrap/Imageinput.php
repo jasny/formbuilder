@@ -30,7 +30,7 @@ class Imageinput extends Fileinput
      * @param array $attr
      * @return string
      */
-    protected function render()
+    protected function renderElement()
     {
         $options = $this->getOptions();
         
