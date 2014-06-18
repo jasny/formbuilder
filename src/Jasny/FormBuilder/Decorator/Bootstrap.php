@@ -4,12 +4,7 @@ namespace Jasny\FormBuilder\Decorator;
 
 use Jasny\FormBuilder\Decorator;
 use Jasny\FormBuilder\Element;
-use Jasny\FormBuilder\Control;
-use Jasny\FormBuilder\Group;
-use Jasny\FormBuilder\Button;
-use Jasny\FormBuilder\Input;
-use Jasny\FormBuilder\Choice;
-use Jasny\FormBuilder\Action;
+use Jasny\FormBuilder as FB;
 
 /**
  * Render element for use with Bootstrap.
@@ -57,7 +52,11 @@ class Bootstrap extends Decorator
         // Add boostrap style class
         if (static::isButton($element)) {
             $element->addClass('btn btn-' . ($element->getOption('btn-style') ?: 'default'));
-        } elseif ($element instanceof Control && !$element instanceof Choice) {
+        } elseif (
+            $element instanceof FB\Input && !(in_array($element->getType(), ['checkbox', 'radio'])) ||
+            $element instanceof FB\Textarea ||
+            $element instanceof FB\Select
+        ) {
             $element->addClass('form-control');
         }
     }
@@ -76,7 +75,7 @@ class Bootstrap extends Decorator
         
         if ($element->hasClass('btn-labeled')) {
             $html = '<span class="btn-label">' . $html . '</span>';
-        } elseif ($element instanceof Input && !static::isButton($element)) {
+        } elseif ($element instanceof FB\Input && !static::isButton($element)) {
             $html = '<span class="input-group-addon">' . $html . '</span>';
         }
         
@@ -117,7 +116,7 @@ class Bootstrap extends Decorator
      */
     public function renderLabel(Element $element, $html)
     {
-        if ($element instanceof Input && $element->attr['type'] === 'hidden') return $html;
+        if ($element instanceof FB\Input && $element->attr['type'] === 'hidden') return $html;
         
         $class = $element->getOption('container') ? 'control-label' : '';
 
@@ -126,7 +125,7 @@ class Bootstrap extends Decorator
             $class = ltrim($class . " " . $grid['label']);
         }
         
-        $required = $element instanceof Control && $element->getAttr('required') ?
+        $required = $element instanceof FB\Control && $element->getAttr('required') ?
             $element->getOption('required-suffix') : '';
         
         if ($class) $class = 'class="' . $class . '"';
@@ -165,7 +164,7 @@ class Bootstrap extends Decorator
         if ($element->hasClass('btn-labeled')) $html = $el;
         
         // Input group for prepend/append
-        $useInputGroup = $element instanceof Input && !self::isButton($element) &&
+        $useInputGroup = $element instanceof FB\Input && !self::isButton($element) &&
             ($element->getOption('prepend') != '' || $element->getOption('append') != '') &&
             $element->getOption('label') !== 'inside';
         
@@ -173,7 +172,7 @@ class Bootstrap extends Decorator
         
         // Grid for horizontal form
         $grid = $element->getOption('grid');
-        if ($grid && $element->getOption('container') && !$element instanceof Group) {
+        if ($grid && $element->getOption('container') && !$element instanceof FB\Group) {
             $class = $grid['control'];
             if ($element->getOption('label') !== true) {
                 $class .= " " . preg_replace('/-(\d+)\b/', '-offset-$1', $grid['label']);
@@ -187,7 +186,7 @@ class Bootstrap extends Decorator
     /**
      * Render the element container to HTML.
      * 
-     * @param BaseControl $element
+     * @param Element $element
      * @param string  $html     Original rendered html
      * @param string  $label    HTML of the label
      * @param string  $field    HTML of the control
@@ -200,7 +199,7 @@ class Bootstrap extends Decorator
         $html = ($label ? $label . "\n" : '') . $field;
         
         // Add error
-        $error = $element instanceof BaseControl ? $element->getError() : null;
+        $error = $element instanceof FB\Control ? $element->getError() : null;
         if ($error) $html .= "\n<span class=\"help-block error\">{$error}</span>";
         
         // Put everything in a container
@@ -222,8 +221,8 @@ class Bootstrap extends Decorator
     protected static function isButton($element)
     {
         return
-            $element instanceof Button ||
-            ($element instanceof Input && in_array($element->attr['type'], ['button', 'submit', 'reset'])) ||
+            $element instanceof FB\Button ||
+            ($element instanceof FB\Input && in_array($element->attr['type'], ['button', 'submit', 'reset'])) ||
             $element->hasClass('btn') ||
             $element->getOption('btn-style');
     }

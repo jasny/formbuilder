@@ -36,7 +36,7 @@ class Fileinput extends Base\BaseControl
         if (!isset($options['buttons'])) $options['buttons'] = self::$buttons;
         
         parent::__construct($name, $description, $attrs, $options);
-        $this->addClass(['fileupload', 'fileupload-new']);
+        $this->addClass(['fileinput', 'fileinput-new']);
     }
     
     
@@ -72,9 +72,9 @@ class Fileinput extends Base\BaseControl
         $this->value = $value;
         
         if (!$this->value || (is_array($value) && $value['error'])) {
-            $this->removeClass('fileupload-exists')->addClass('fileupload-new');
+            $this->removeClass('fileinput-exists')->addClass('fileinput-new');
         } else {
-            $this->removeClass('fileupload-new')->addClass('fileupload-exists');
+            $this->removeClass('fileinput-new')->addClass('fileinput-exists');
         }
         
         return $this;
@@ -166,27 +166,22 @@ class Fileinput extends Base\BaseControl
      */
     protected function renderElement()
     {
-        $options = $this->getOptions();
-        
         $hidden = null;
-        $value = null;
+        $name = htmlentities($this->getName());
         
         if (is_array($this->value) && !$this->value['error']) {
-            $hidden = '<input type="hidden" name="' . htmlentities($this->getAttr('name')) . '" '
+            $hidden = '<input type="hidden" name="' . $name . '" '
                 . 'value="^;' . htmlentities(join(';', $this->value)) . '">' . "\n";
-            $value = htmlentities(basename($this->value['name']));
-        } elseif ($this->value) {
-            $value = htmlentities(basename($this->value));
         }
         
         $attr_html = $this->attr->render(['name'=>null, 'multiple'=>null]);
 
-        $preview = $this->renderPreview($value, $options);
-        $button_select = $this->renderSelectButton($options);
-        $button_remove = $this->renderRemoveButton($options);
+        $preview = $this->renderPreview();
+        $button_select = $this->renderSelectButton();
+        $button_remove = $this->renderRemoveButton();
         
         $html = <<<HTML
-<div{$attr_html} data-provides="fileupload">
+<div {$attr_html} data-provides="fileinput">
   {$hidden}<div class="input-append">
     <div class="uneditable-input span3">{$preview}</div>{$button_select}{$button_remove}
   </div>
@@ -202,10 +197,16 @@ HTML;
      * @param string $value
      * @return string
      */
-    protected function renderPreview($value)
+    protected function renderPreview()
     {
+        if (is_array($this->value)) {
+            $value = $this->value['error'] ? null : htmlentities(basename($this->value['name']));
+        } else {
+            $value = htmlentities(basename($this->value));
+        }
+        
         return <<<HTML
-<i class="icon-file fileupload-exists"></i> <span class="fileupload-preview">$value</span>
+<i class="icon-file fileinput-exists"></i> <span class="fileinput-preview">$value</span>
 HTML;
     }
     
@@ -218,11 +219,11 @@ HTML;
     {
         $attr = $this->attr->renderOnly(['name', 'multiple']);
         
-        $button_select = htmlentities($this->getOption('select-button'));
-        $button_change = htmlentities($this->getOption('change-button'));
+        $button_select = htmlentities($this->getOption('select-button') ?: 'Select');
+        $button_change = htmlentities($this->getOption('change-button') ?: 'Change');
         
         return <<<HTML
-<span class="btn btn-file"><span class="fileupload-new">$button_select</span><span class="fileupload-exists">$button_change</span><input type="file" $attr /></span> 
+<span class="btn btn-default btn-file"><span class="fileinput-new">$button_select</span><span class="fileinput-exists">$button_change</span><input type="file" $attr /></span> 
 HTML;
     }
     
@@ -233,11 +234,11 @@ HTML;
      */
     protected function renderRemoveButton()
     {
-        $button_remove = htmlentities($this->getOption('remove-button'));
+        $button_remove = htmlentities($this->getOption('remove-button') ?: 'Remove');
         if (!$button_remove) return null;
         
         return <<<HTML
-<button class="btn fileupload-exists" data-dismiss="fileupload">$button_remove</button>
+<button class="btn btn-default fileinput-exists" data-dismiss="fileinput">$button_remove</button>
 HTML;
     }
 }

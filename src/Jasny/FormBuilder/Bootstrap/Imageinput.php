@@ -32,45 +32,54 @@ class Imageinput extends Fileinput
      */
     protected function renderElement()
     {
-        $options = $this->getOptions();
-        
         $hidden = null;
-        $image = null;
+        $name = htmlentities($this->getName());
+        $attr_html = $this->attr->render(['name'=>null]);
         
-        if (is_array($this->value)) {
-            if (!$this->value['error']) {
-                $hidden = '<input type="hidden" name="' . htmlentities($attr['name']). '" '
-                    . 'value="^;' . htmlentities(join(';', $this->value)) . '">' . "\n";
-                $image = $this->createInlineImage($this->value['tmp_name']);
-            }
-        } elseif ($this->value) {
-            $image = '<img src="' . $this->value . '">';
+        if (is_array($this->value) && !$this->value['error']) {
+            $hidden = '<input type="hidden" name="' . $name . '" '
+                . 'value="^;' . htmlentities(join(';', $this->value)) . '">' . "\n";
         }
 
-        $name = htmlentities($this->getAttr('name'));
-        $attr_html = $this->renderAttrs(['name'=>null]);
-        
-        $button_select = htmlentities($options['buttons']['select']);
-        $button_change = htmlentities($options['buttons']['change']);
-        $button_remove = htmlentities($options['buttons']['remove']);
+        $preview = $this->renderPreview();
+        $button_select = $this->renderSelectButton();
+        $button_remove = $this->renderRemoveButton();
 
-        if (isset($options['holder'])) {
-            $thumbnail = '<div class="fileinput-new thumbnail">' . $options['holder'] . '</div>' . "\n"
-                . '<div class="fileinput-exists fileinput-preview thumbnail">' . $image . '</div>';
-        } else {
-            $thumbnail = '<div class="fileinput-preview thumbnail">' . $image . '</div>';
-        }
-        
         $html = <<<HTML
-<div{$attr_html} data-provides="fileinput">
-  $thumbnail
+<div {$attr_html} data-provides="fileinput">
+  $preview
   <div>
-    <span class="btn btn-file"><span class="fileinput-new">$button_select</span><span class="fileinput-exists">$button_change</span><input type="file" name="$name"/></span>
-    <button class="btn fileinput-exists" data-dismiss="fileinput">$button_remove</button>
+    $button_select
+    $button_remove
   </div>
 </div>
 HTML;
         
         return $html;
     }    
+
+    /**
+     * Render image preview
+     * 
+     * @return $html
+     */
+    protected function renderPreview()
+    {
+        $holder = $this->getOption('holder');
+        
+        if (is_array($this->value)) {
+            $image = $this->value['error'] ? null : $this->createInlineImage($this->value['tmp_name']);
+        } else {
+            $image = '<img src="' . htmlentities($this->value) . '">';
+        }
+        
+        if ($holder) {
+            $html = '<div class="fileinput-new thumbnail" data-trigger="fileinput" >' . $holder . '</div>' . "\n"
+                . '<div class="fileinput-exists fileinput-preview thumbnail">' . $image . '</div>';
+        } else {
+            $html = '<div class="fileinput-preview thumbnail" data-trigger="fileinput" >' . $image . '</div>';
+        }
+        
+        return $html;
+    }
 }
