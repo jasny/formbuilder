@@ -140,10 +140,15 @@ class $classname extends Form
 {
     /**
      * Class constructor.
+     * 
+     * @param array \$options  Element options
+     * @param array \$attr     HTML attributes
      */
-    public function __construct()
+    public function __construct(array \$options=[], array \$attr=[])
     {
-        parent::__construct(['name'=>'{$info->name}']);
+        \$options += ['name'=>'{$info->name}'];
+        
+        parent::__construct(\$options, \$attr);
         
         $addElements
         \$this->add('button', ['description'=>'Save', 'name'=>'submit'], ['type'=>'submit']);
