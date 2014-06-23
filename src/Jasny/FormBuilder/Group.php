@@ -54,8 +54,8 @@ class Group extends Element
         if (isset(static::$customTypes[$type])) {
             $custom = static::$customTypes[$type];
             $type = $custom[0];
-            $options = $custom[1] + $options;
-            $attr = $custom[2] + $attr;
+            if (isset($custom[1])) $options = $custom[1] + $options;
+            if (isset($custom[2])) $attr = $custom[2] + $attr;
         }
         
         if ($this->parent) return $this->parent->build($type, $options, $attr);
