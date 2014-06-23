@@ -75,9 +75,6 @@ class FormBuilder
         'week' =>     ['Jasny\FormBuilder\Input', ['type'=>'week']],
         'url' =>      ['Jasny\FormBuilder\Input', ['type'=>'url']],
         'email' =>    ['Jasny\FormBuilder\Input', ['type'=>'email']],
-        
-        'bootstrap/fileinput' =>  ['Jasny\FormBuilder\Bootstrap\Fileinput'],
-        'bootstrap/imageinput' => ['Jasny\FormBuilder\Bootstrap\Imageinput'],
     ];
 
     /**
@@ -87,8 +84,6 @@ class FormBuilder
     public static $decorators = [
         'tidy' =>   ['Jasny\FormBuilder\Decorator\Tidy'],
         'indent' => ['Jasny\FormBuilder\Decorator\Dindent'],
-        
-        'bootstrap' => ['Jasny\FormBuilder\Decorator\Bootstrap'],
     ];
     
     /**

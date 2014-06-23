@@ -10,6 +10,13 @@ use Jasny\FormBuilder;
 class Group extends Element
 {
     /**
+     * Overwrite element types for factory method
+     * @var array
+     */
+    protected static $customTypes = [];
+    
+    
+    /**
      * The HTML tag name.
      * @var string
      */
@@ -44,6 +51,13 @@ class Group extends Element
      */
     protected function build($type, array $options=[], array $attr=[])
     {
+        if (isset(static::$customTypes[$type])) {
+            $custom = static::$customTypes[$type];
+            $type = $custom[0];
+            $options = $custom[1] + $options;
+            $attr = $custom[2] + $attr;
+        }
+        
         if ($this->parent) return $this->parent->build($type, $options, $attr);
         return FormBuilder::element($type, $options, $attr);
     }
