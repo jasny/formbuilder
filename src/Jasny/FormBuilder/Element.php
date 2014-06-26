@@ -174,8 +174,16 @@ abstract class Element
     public function getId()
     {
         if (!isset($this->attr['id'])) {
-            $id = base_convert(uniqid(), 16, 32);
-            if ($this->getForm()) $id = $this->getForm()->getId() . '-' . $id;
+            $form = $this->getForm();
+            
+            if ($form) {
+                $name = $this->getName();
+                $id = $this->getForm()->getId() . '-' . ($name ?
+                    preg_replace('/[^\w\-]/', '', str_replace('[', '-', $name)) :
+                    base_convert(uniqid(), 16, 32));
+            } else {
+                $id =  base_convert(uniqid(), 16, 32);
+            }
 
             $this->attr['id'] = $id;
         }
@@ -191,7 +199,7 @@ abstract class Element
      */
     public function setName($name)
     {
-        return $this->attr['name'] = $name;
+        return $this->setOption('name', $name);
     }
     
     /**
@@ -201,7 +209,7 @@ abstract class Element
      */
     public function getName()
     {
-        return $this->attr['name'];
+        return $this->getOption('name');
     }
     
     /**

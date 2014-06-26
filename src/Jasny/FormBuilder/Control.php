@@ -38,6 +38,17 @@ abstract class Control extends Element
     
     
     /**
+     * Set the name of the element.
+     * 
+     * @param string $name
+     * @return Control $this
+     */
+    public function setName($name)
+    {
+        return $this->attr['name'] = $name;
+    }
+    
+    /**
      * Return the name of the control.
      * 
      * @return string
