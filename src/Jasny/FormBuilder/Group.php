@@ -62,7 +62,7 @@ class Group extends Element
         
         if (is_string($type) && $type[0] === ':') {
             $method = 'build' . str_replace(' ', '', ucwords(strtr(substr($type, 1), '_-', '  ')));
-            if (!method_exists($this, $method)) throw new Exception("Unknown field '" . substr($type, 1) . "'");
+            if (!method_exists($this, $method)) throw new \Exception("Unknown field '" . substr($type, 1) . "'");
             return $this->$method(null, $options, $attr);
         }
         
