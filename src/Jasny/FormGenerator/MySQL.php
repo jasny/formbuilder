@@ -110,7 +110,7 @@ class MySQL extends FormGenerator
             }
         }
 
-        if ($options['type'] !== 'hidden' && $field['Null'] === 'No') $options['required'] = true;
+        if ($options['type'] !== 'hidden' && strtolower($field['Null']) === 'no') $options['required'] = true;
 
         if (!isset($options['type'])) return null;
         return $options;
