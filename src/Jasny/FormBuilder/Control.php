@@ -5,7 +5,7 @@ namespace Jasny\FormBuilder;
 /**
  * Base class of form control elements.
  */
-abstract class Control extends Element implements Control
+abstract class Control extends Element
 {
     use RenderPartial;
     use Validation;
