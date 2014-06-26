@@ -5,7 +5,7 @@ namespace Jasny\FormBuilder;
 /**
  * Representation of a control with items in a form.
  */
-abstract class ChoiceControl extends BaseControl
+abstract class ChoiceControl extends Control
 {
     /**
      * @var array
@@ -82,7 +82,7 @@ abstract class ChoiceControl extends BaseControl
      * Set the value of the control.
      * 
      * @param string $value
-     * @return BaseControl $this
+     * @return Control $this
      */
     public function setValue($value)
     {

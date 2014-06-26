@@ -3,7 +3,7 @@
 namespace Jasny\FormBuilder;
 
 /**
- * Representation of an HTML <form> with bootstrap elements.
+ * Representation of an HTML5 <form>.
  * 
  * @option method  Form method attribute
  * @option action  Form action attribute

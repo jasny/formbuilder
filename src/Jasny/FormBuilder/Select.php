@@ -3,7 +3,7 @@
 namespace Jasny\FormBuilder;
 
 /**
- * Representation of a <select> element in a Bootstrap form.
+ * Representation of a <select> element.
  * 
  * Options
  *  - selected-first  Put the selected option(s) on top of the list

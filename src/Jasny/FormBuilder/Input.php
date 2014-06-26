@@ -13,7 +13,7 @@ namespace Jasny\FormBuilder;
  * 
  * @todo Support multiple file upload
  */
-class Input extends BaseControl
+class Input extends Control
 {
     /**
      * Upload data. Only used for <input type="file">.
@@ -116,7 +116,7 @@ class Input extends BaseControl
      * Set the value of the control.
      * 
      * @param mixed $value
-     * @return Boostrap/BaseControl $this
+     * @return Control $this
      */
     public function setValue($value)
     {

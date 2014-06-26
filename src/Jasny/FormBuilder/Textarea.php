@@ -3,7 +3,7 @@
 namespace Jasny\FormBuilder;
 
 /**
- * Representation of a <textarea> element in a Bootstrap form.
+ * Representation of a <textarea> element.
  * 
  * @option id           Element id
  * @option name         Element name
@@ -11,7 +11,7 @@ namespace Jasny\FormBuilder;
  * @option type         HTML5 input type
  * @option value        Element value
  */
-class Textarea extends BaseControl
+class Textarea extends Control
 {
     /**
      * @var string
@@ -52,7 +52,7 @@ class Textarea extends BaseControl
      * Set the value of the control.
      * 
      * @param string $value
-     * @return Boostrap/BaseControl $this
+     * @return Control $this
      */
     public function setValue($value)
     {

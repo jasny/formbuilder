@@ -47,7 +47,7 @@ class Group extends Element
      * @param string $type     Element type
      * @param array  $options  Element options
      * @param array  $attr     HTML attributes
-     * @return FormBuilder\Element|FormBuilder\Control
+     * @return Element|Control
      */
     protected function build($type, array $options=[], array $attr=[])
     {

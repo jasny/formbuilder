@@ -92,7 +92,7 @@ class FormBuilder
      * @param string $name     Element name
      * @param array  $options  Element options
      * @param array  $attr     HTML attributes
-     * @return FormBuilder\Element|FormBuilder\Control
+     * @return Element|Control
      */
     public static function element($name, array $options=[], array $attr=[])
     {
