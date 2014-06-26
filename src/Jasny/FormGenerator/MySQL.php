@@ -118,26 +118,6 @@ class MySQL extends FormGenerator
     
     
     /**
-     * Enable the generator.
-     * 
-     * @param object  $source      Source object to use
-     * @param string  $cache_path  Directory to save the cache files
-     * @param string  $namespace   Namespace for the Form classes
-     */
-    public static function enable($source, $cache_path=null, $namespace=null)
-    {
-        if (!$source instanceof \mysqli && !$source instanceof \PDO) {
-            $type = is_object(self::$source) ? get_class(self::$source) . " object" : gettype(self::$source);
-            throw new \Exception("Expected a mysqli or PDO object as source, but got a $type");
-        } elseif ($source instanceof \PDO && $source->getAttribute(PDO::ATTR_DRIVER_NAME) != 'mysql') {
-            throw new \Exception("PDO is connected to a " . $source->getAttribute(PDO::ATTR_DRIVER_NAME). " database");
-        }
-        
-        parent::enable($source, $cache_path, $namespace);
-    }
-    
-    
-    /**
      * Perform an SQL query
      * 
      * @param string $sql
@@ -186,27 +166,14 @@ class MySQL extends FormGenerator
         return $result->fetchAll(PDO::FETCH_ASSOC);
     }
     
-    
     /**
-     * Automatically create classes for table gateways and records
+     * Turn classname into table name
      * 
-     * @param string $class
+     * @param string $classname
+     * @return string
      */
-    protected static function autoload($class)
+    protected static function classToName($classname)
     {
-        list($classname, $ns) = static::splitClass($class);
-        
-        if (substr($classname, -4) !== 'Form') return;
-        if (preg_replace('/(^|\\\\)' . static::$baseNamespace . '/', '', $ns) != static::$namespace) return;
-        
-        $name = self::uncamelcase(preg_replace('/Form$/i', '', $classname));
-        if (!empty($name)) $info = static::getInfo($name);
-        
-        if (empty($info)) return; // Class doesn't match any table
-        if (self::loadFromCache($class, self::getChecksum($info))) return;
-
-        $code = static::generate($info, $classname, $ns);
-        
-        self::cacheAndLoad($class, "<?php\n" . $code) or eval($code);
+        return self::uncamelcase(preg_replace('/form$/i', '', $classname));
     }
 }
