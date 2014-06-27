@@ -23,7 +23,7 @@ class Select extends Choice
         $opts = $opts_first = [];
 
         $placeholder = $this->getOption('placeholder');
-        if ($placeholder) {
+        if ($placeholder !== false) {
             $selected = !isset($value) || $value === '';
             $opts_first[] = "<option value=\"\"" . ($selected ? ' selected' : '') . " disabled>"
                 . htmlentities($placeholder) . "</option>\n";
