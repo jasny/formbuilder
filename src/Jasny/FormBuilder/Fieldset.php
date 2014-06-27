@@ -33,7 +33,7 @@ class Fieldset extends Group
      */
     public function setLegend($legend)
     {
-        $this->legend = $legend;
+        $this->setOption('legend', $legend);
         return $this;
     }
     
@@ -44,7 +44,7 @@ class Fieldset extends Group
      */
     public function getLegend()
     {
-        return $this->legend;
+        return $this->getOption('legend');
     }
     
     /**
@@ -55,7 +55,7 @@ class Fieldset extends Group
     public function open()
     {
         $html = "<fieldset {$this->attr}>";
-        if (isset($this->legend)) $html .= "\n<legend>" . $this->legend . "</legend>";
+        if ($this->getLegend()) $html .= "\n<legend>" . $this->getLegend() . "</legend>";
         
         return $html;
     }
