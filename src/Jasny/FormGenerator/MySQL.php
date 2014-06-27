@@ -70,6 +70,10 @@ class MySQL extends FormGenerator
      */
     protected static function getInfo($table)
     {
+        if (preg_match('/\W/', $table)) return null; // Prevent SQL injection
+        
+        if (count(static::query("SHOW TABLES LIKE '$table'")) === 0) return null;
+        
         $fields = static::query("DESCRIBE `$table`");
 
         return (object)[
