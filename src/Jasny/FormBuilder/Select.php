@@ -17,12 +17,20 @@ class Select extends ChoiceControl
      */
     protected function renderContent()
     {
+        $value = $this->getValue();
         $selected_first = (boolean)$this->getOption('selected-first');
         
         $opts = $opts_first = [];
+
+        $placeholder = $this->getOption('placeholder');
+        if ($placeholder) {
+            $selected = !isset($value) || $value === '';
+            $opts_first[] = "<option value=\"\"" . ($selected ? ' selected' : '') . " disabled>"
+                . htmlentities($placeholder) . "</option>\n";
+        }
         
         foreach ($this->items as $key=>$val) {
-            $selected = !is_array($this->value) ? $key == $this->value : in_array($key, $this->value);
+            $selected = !is_array($value) ? $key == $value : in_array($key, $value);
             $opt = "<option value=\"" . htmlentities($key) . "\"" . ($selected ? ' selected' : '') . ">"
                 . htmlentities($val) . "</option>\n";
             
