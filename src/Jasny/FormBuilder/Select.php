@@ -8,7 +8,7 @@ namespace Jasny\FormBuilder;
  * Options
  *  - selected-first  Put the selected option(s) on top of the list
  */
-class Select extends ChoiceControl
+class Select extends Choice
 {
     /**
      * Render the content of the HTML element.

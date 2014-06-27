@@ -54,8 +54,8 @@ class FormBuilder
         'button' =>   ['Jasny\FormBuilder\Button'],
         'link' =>     ['Jasny\FormBuilder\Hyperlink'],
             
-        'choice' =>   ['Jasny\FormBuilder\Choice'],
-        'multi' =>    ['Jasny\FormBuilder\Choice', ['multiple'=>true]],
+        'choice' =>   ['Jasny\FormBuilder\ChoiceList'],
+        'multi' =>    ['Jasny\FormBuilder\ChoiceList', ['multiple'=>true]],
         'input' =>    ['Jasny\FormBuilder\Input'],
         'select' =>   ['Jasny\FormBuilder\Select'],
         'textarea' => ['Jasny\FormBuilder\Textarea'],
