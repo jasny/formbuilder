@@ -19,7 +19,8 @@ class Choice extends ChoiceControl
     {
         $this->getId();
         $name = $this->getAttr('name');
-        $type = $this->getAttr('multiple') ? 'checkbox' : 'radio';
+        $value = $this->getValue();
+        $type = $this->getOption('multiple') ? 'checkbox' : 'radio';
 
         $selected_first = (boolean)$this->getOption('selected-first');
         $single_line = (boolean)$this->getOption('single-line');
@@ -28,11 +29,7 @@ class Choice extends ChoiceControl
         $inputs = $inputs_first = [];
         
         foreach ($this->items as $key=>$val) {
-            if (is_array($this->value)) {
-                $selected = in_array($key, $this->value);
-            } else {
-                $selected = (string)$key === (string)$this->value;
-            }
+            $selected = !is_array($value) ? (string)$key === (string)$value : in_array($key, $value);
             
             $html_attrs = 'type="' . $type . '" name="' . htmlentities($name) . '"'
                 . 'value="' . htmlentities($key) . '"' . ($selected ? ' checked' : '');

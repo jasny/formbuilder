@@ -30,7 +30,7 @@ class Select extends ChoiceControl
         }
         
         foreach ($this->items as $key=>$val) {
-            $selected = !is_array($value) ? $key == $value : in_array($key, $value);
+            $selected = !is_array($value) ? (string)$key === (string)$value : in_array($key, $value);
             $opt = "<option value=\"" . htmlentities($key) . "\"" . ($selected ? ' selected' : '') . ">"
                 . htmlentities($val) . "</option>\n";
             
