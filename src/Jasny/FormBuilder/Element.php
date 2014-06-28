@@ -49,8 +49,7 @@ abstract class Element
     public function __construct(array $options=[], array $attr=[])
     {
         if (isset($options['id'])) $attr['id'] = $options['id'];
-        if (isset($options['name'])) $attr['name'] = $options['name'];
-        unset($options['id'], $options['name']);
+        unset($options['id']);
         
         $this->attr = new Attr($attr + $this->attr);
         $this->options = array_merge($this->options, $options);
