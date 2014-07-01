@@ -61,7 +61,7 @@ class Group extends Element
         if ($this->parent) return $this->parent->build($type, $options, $attr);
         
         if (is_string($type) && $type[0] === ':') {
-            $method = 'build' . str_replace(' ', '', ucwords(strtr(substr($type, 1), '_-', '  ')));
+            $method = 'build' . str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]/', ' ', substr($type, 1))));
             if (!method_exists($this, $method)) throw new \Exception("Unknown field '" . substr($type, 1) . "'");
             return $this->$method(null, $options, $attr);
         }
@@ -79,6 +79,8 @@ class Group extends Element
      */
     public function add($child, array $options=[], array $attr=[])
     {
+        if (!isset($child)) return $this;
+        
         if (is_string($child) && $child[0] !== '<') {
             $child = $this->build($child, $options, $attr);
         }
@@ -137,6 +139,8 @@ class Group extends Element
         }
         
         foreach ($this->children as $i=>$child) {
+            if (!$child instanceof Element) continue;
+            
             if (isset($id) && $child->getId() === $id) {
                 $found = $child;
                 if ($unlink) unset($this->children[$i]);
