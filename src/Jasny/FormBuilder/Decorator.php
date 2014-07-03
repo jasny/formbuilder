@@ -8,54 +8,54 @@ namespace Jasny\FormBuilder;
 abstract class Decorator
 {
     /**
+     * Wether or not to indent each individual child node.
+     * @var boolean
+     */
+    protected $deep = false;
+    
+    /**
      * Wether or not to apply the decorator to all descendants.
      * 
      * @return boolean
      */
-    abstract public function isDeep();
-    
-    
-    /**
-     * Called when decorator is added to element
-     * 
-     * @param Element $element
-     */
-    public function connect(Element $element)
+    public function isDeep()
     {
+        return $this->deep;
     }
-
+    
+    
     /**
      * Apply modifications.
      * 
      * @param Element $element
+     * @param boolean $deep     The decorator of a parent is applied to a child
      */
-    public function apply(Element $element)
+    public function apply(Element $element, $deep)
     {
     }
     
     /**
-     * Modify options.
+     * Validate the element
      * 
      * @param Element $element
-     * @param array   $options
-     * @return array
-     */
-    public function applyToOptions(Element $element, $options)
-    {
-        return $options;
-    }
-    
-    
-    /**
-     * Check if element or group is valid.
-     * 
-     * @param Element $element
-     * @param boolean $valid
+     * @param boolean $valid    Result of FormBuilder validation
      * @return boolean
      */
-    public function isValid(Element $element, $valid)
+    public function validate(Element $element, $valid)
     {
         return $valid;
+    }
+    
+    /**
+     * Modify the value
+     * 
+     * @param Element $element
+     * @param mixed   $value
+     * @return mixed
+     */
+    public function filter(Element $element, $value)
+    {
+        return $value;
     }
     
     
@@ -72,76 +72,13 @@ abstract class Decorator
     }
     
     /**
-     * Render prepend HTML.
-     * 
-     * @param Element $element
-     * @param string  $html     Original rendered html
-     * @return string
-     */
-    public function renderPrepend(Element $element, $html)
-    {
-        return $html;
-    }
-    
-    /**
-     * Render append HTML.
-     * 
-     * @param Element $element
-     * @param string  $html     Original rendered html
-     * @return string
-     */
-    public function renderAppend(Element $element, $html)
-    {
-        return $html;
-    }
-    
-    /**
-     * Render a label bound to the element.
-     * 
-     * @param Element $element
-     * @param string  $html     Original rendered html
-     * @return string
-     */
-    public function renderLabel(Element $element, $html)
-    {
-        return $html;
-    }
-    
-    /**
-     * Render the content of the element control to HTML.
+     * Render the element content to HTML
      * 
      * @param Element $element
      * @param string  $html     Original rendered html
      * @return string
      */
     public function renderContent(Element $element, $html)
-    {
-        return $html;
-    }
-    
-    /**
-     * Render the element control to HTML.
-     * 
-     * @param Element $element
-     * @param string  $html     Original rendered html
-     * @param string  $el       HTML element
-     * @return string
-     */
-    public function renderControl(Element $element, $html, $el)
-    {
-        return $html;
-    }
-    
-    /**
-     * Render the element container to HTML.
-     * 
-     * @param Element $element
-     * @param string  $html     Original rendered html
-     * @param string  $label    HTML of the label
-     * @param string  $control  HTML of the control
-     * @return string
-     */
-    public function renderContainer(Element $element, $html, $label, $control)
     {
         return $html;
     }

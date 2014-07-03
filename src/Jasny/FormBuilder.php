@@ -2,6 +2,9 @@
 
 namespace Jasny;
 
+use Jasny\FormBuilder\Element;
+use Jasny\FormBuilder\Group;
+
 /**
  * FormBuilder factory
  */
@@ -17,7 +20,7 @@ class FormBuilder
         'validation-script' => true,   // Include <script> for validation that isn't supported by HTML5
         'add-hidden' => true,          // Add hidden input for checkbox inputs
         'required-suffix' => ' *',     // Suffix label for required controls
-        'container' => true,           // Place each form element in a container
+        'container' => 'div',          // Place each form element in a container
         'label' => true,               // Add a label for each form element
         'inside-label'=>false,         // Put element inside a label
         
@@ -42,18 +45,22 @@ class FormBuilder
     ];
 
     /**
-     * Named element types
+     * Element types
      * @var array
      */
     public static $elements = [
-        'div' =>      ['Jasny\FormBuilder\Div'],
+        'div' =>      ['Jasny\FormBuilder\Div', ['tagname' => 'div']],
         'form' =>     ['Jasny\FormBuilder\Form'],
         'fieldset' => ['Jasny\FormBuilder\Fieldset'],
         'group' =>    ['Jasny\FormBuilder\Group'],
         
+        'span' =>     ['Jasny\FormBuilder\Span'],
+        'label' =>    ['Jasny\FormBuilder\Label'],
+        'legend' =>   ['Jasny\FormBuilder\Legend'],
+        
         'button' =>   ['Jasny\FormBuilder\Button'],
         'link' =>     ['Jasny\FormBuilder\Hyperlink'],
-            
+        
         'choice' =>   ['Jasny\FormBuilder\ChoiceList'],
         'multi' =>    ['Jasny\FormBuilder\ChoiceList', ['multiple'=>true]],
         'input' =>    ['Jasny\FormBuilder\Input'],
@@ -78,29 +85,32 @@ class FormBuilder
     ];
 
     /**
-     * Named decorators
+     * Decorator types
      * @var array
      */
     public static $decorators = [
-        'tidy' =>   ['Jasny\FormBuilder\Decorator\Tidy'],
-        'indent' => ['Jasny\FormBuilder\Decorator\Dindent'],
+        'filter' =>     'Jasny\FormBuilder\Decorator\SimpleFilter',
+        'validation' => 'Jasny\FormBuilder\Decorator\SimpleValidation',
+        
+        'tidy' =>   'Jasny\FormBuilder\Decorator\Tidy',
+        'indent' => 'Jasny\FormBuilder\Decorator\Dindent',
     ];
     
     /**
      * Create a form element
      * 
-     * @param string $name     Element name
+     * @param string $type     Element type
      * @param array  $options  Element options
      * @param array  $attr     HTML attributes
      * @return Element|Control
      */
-    public static function element($name, array $options=[], array $attr=[])
+    public static function element($type, array $options=[], array $attr=[])
     {
-        if (!isset(static::$elements[$name])) throw new \InvalidArgumentException("Unknown element type '$name'.");
+        if (!isset(static::$elements[$type])) throw new \InvalidArgumentException("Unknown element type '$type'.");
         
-        $class = static::$elements[$name][0];
-        if (isset(static::$elements[$name][1])) $options += static::$elements[$name][1];
-        if (isset(static::$elements[$name][2])) $attr += static::$elements[$name][2];
+        $class = static::$elements[$type][0];
+        if (isset(static::$elements[$type][1])) $options += static::$elements[$type][1];
+        if (isset(static::$elements[$type][2])) $attr += static::$elements[$type][2];
         
         return new $class($options, $attr);
     }
@@ -108,17 +118,48 @@ class FormBuilder
     /**
      * Create a form decorator
      * 
-     * @param string $name     Decorator name
-     * @param array  $options  Decorator options
+     * @param string $type  Decorator type
+     * @param mixed  $_     Additional arguments are passed to the constructor
      * @return FormBuilder\Decorator
      */
-    public static function decorator($name, array $options=[])
+    public static function decorator($type)
     {
-        if (!isset(static::$decorators[$name])) throw new \InvalidArgumentException("Unknown decorator '$name'.");
+        if (!isset(static::$decorators[$type])) throw new \InvalidArgumentException("Unknown decorator '$type'.");
         
-        $class = static::$decorators[$name][0];
-        if (isset(static::$decorators[$name][1])) $options += static::$decorators[$name][1];
+        $class = static::$decorators[$type];
+        $args = array_slice(func_get_args(), 1);
         
-        return new $class($options);
+        $refl = new \ReflectionClass($class);
+        return $refl->newInstanceArgs($args);
+    }
+    
+    
+    /**
+     * Convert an element to another type.
+     * 
+     * @param Element $element
+     * @param string  $type
+     * @return Element
+     */
+    public static function convert($element, $type)
+    {
+        $options = $element->getOptions();
+        $attr = $element->attr;
+        
+        $new = $element->build($type, $options);
+        
+        
+        if ($element instanceof Group && $new instanceof Group) {
+            $children = $element->getChildren();
+            foreach ($children as $child) {
+                $new->add($child);
+            }
+        }
+        
+        foreach ($element->getDecorators() as $decorator) {
+            $new->addDecorator($decorator);
+        }
+        
+        return $new;
     }
 }

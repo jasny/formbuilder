@@ -5,8 +5,8 @@ namespace Jasny\FormBuilder;
 /**
  * Div element
  */
-class Div extends Group
+class Legend extends Node
 {
     /** @var string */
-    const TAGNAME = 'div';
+    const TAGNAME = 'legend';
 }

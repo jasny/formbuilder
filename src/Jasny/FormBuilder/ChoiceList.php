@@ -65,7 +65,7 @@ class ChoiceList extends Choice
      * 
      * @return string
      */
-    protected function renderElement()
+    public function renderElement()
     {
         if ($this->getOption('single-line')) $this->addClass('choicelist-single-line');
         

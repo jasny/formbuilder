@@ -17,7 +17,7 @@ abstract class Action extends Element
      */
     public function __construct(array $options=[], array $attrs=[])
     {
-        $options += ['label'=>false, 'encode'=>true];
+        $options += ['label'=>false, 'escape'=>true];
         parent::__construct($options, $attrs);
     }
     
@@ -57,15 +57,26 @@ abstract class Action extends Element
     
     
     /**
-     * Get the content of the button/link.
+     * Render the content of the element.
      * 
      * @return string
      */
-    public function renderContent()
+    protected function renderContent()
     {
         $content = $this->getDescription();
         if ($this->getOption('escape')) $content = htmlentities($content);
 
         return $content;
+    }
+    
+    /**
+     * Render the element.
+     * 
+     * @return string
+     */
+    public function renderElement()
+    {
+        $tagname = $this::TAGNAME;
+        return "<{$tagname} {$this->attr}>" . $this->getContent() . "</{$tagname}>";
     }
 }

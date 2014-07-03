@@ -172,7 +172,7 @@ class Input extends Control
      * @param string $el  HTML element
      * @return string
      */
-    protected function renderControl($el)
+    public function renderControl($el)
     {
         // Determine default options and attributes
         if ($this->attr['type'] === 'checkbox' && $this->getOption('add-hidden')) {
@@ -188,7 +188,7 @@ class Input extends Control
      * 
      * @return string
      */
-    protected function renderElement()
+    public function renderElement()
     {
         return "<input {$this->attr}>";
     }

@@ -180,7 +180,7 @@ class $classname extends Form
      * @param array  \$attr     HTML attributes
      * @return \Jasny\FormBuilder\Control
      */
-    protected function build(\$type, array \$options=[], array \$attr=[])
+    public function build(\$type, array \$options=[], \$attr=[])
     {
         return parent::build(\$type, \$options, \$attr);
     }

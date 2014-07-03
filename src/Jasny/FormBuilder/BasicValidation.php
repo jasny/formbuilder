@@ -8,7 +8,7 @@ namespace Jasny\FormBuilder;
  *  - Process upload errors.
  *  - Client side support for minlength and matching element values (using JavaScript).
  */
-trait Validation
+trait BasicValidation
 {
     /**
      * Validate if the control has a value if it's required.

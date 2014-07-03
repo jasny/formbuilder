@@ -2,102 +2,95 @@
 
 namespace Jasny\FormBuilder;
 
+use Jasny\FormBuilder;
+
 /**
  * Render only part of the element
  */
 trait RenderPartial
 {
+    /** @var Span */
+    protected $prepend;
+    
+    /** @var Span */
+    protected $append;
+    
+    /** @var Label */
+    protected $label;
+
+    /** @var Group */
+    protected $container;
+    
+    
     /**
-     * Get prepend HTML.
+     * Get the append component.
      * 
-     * @return string
+     * @return Span
      */
     public function getPrepend()
     {
-        $this->applyDecorators();
-        
-        $prepend = $this->getOption('prepend');
-        
-        foreach ($this->getDecorators() as $decorator) {
-            $prepend = $decorator->renderPrepend($this, $prepend);
-        }
-        
-        return $prepend;
+        if (!isset($this->prepend)) $this->prepend = $this->build('span');
+        return $this->prepend;
     }
-            
+    
     /**
-     * Get append HTML.
+     * Get the append component.
      * 
-     * @return string
+     * @return Span
      */
     public function getAppend()
     {
-        $this->applyDecorators();
-        
-        $append = $this->getOption('append');
-       
-        foreach ($this->getDecorators() as $decorator) {
-            $append = $decorator->renderAppend($this, $append);
-        }
-        
-        return $append;
+        if (!isset($this->append)) $this->append = $this->build('span');
+        return $this->append;
     }
     
-    
     /**
-     * Get the <label> component.
+     * Get the label component.
      * 
-     * @return string
+     * @return Label
      */
-    final public function getLabel()
+    public function getLabel()
     {
-        $opt = $this->getOption('label');
-        if ($opt === false || $opt === 'inside') return null;
-        
-        $this->applyDecorators();
-        
-        $html = $this->renderLabel();
-        
-        foreach ($this->getDecorators() as $decorator) {
-            $html = $decorator->renderLabel($this, $html);
-        }
-        
-        return $html;
+        if (!isset($this->label)) $this->label = $this->build('label');
+        return $this->label;
     }
     
     /**
-     * Render the control including layout elements.
+     * Get the container component.
      * 
-     * @return string
+     * @return Group
      */
-    final public function getControl()
+    public function getContainer()
     {
-        $this->applyDecorators();
+        $type = $this->getOption('container') ?: 'group';
         
-        $el = $this->renderElement();
-        $html = $this->renderControl($el);
-        
-        foreach ($this->getDecorators() as $decorator) {
-            $html = $decorator->renderControl($this, $html, $el);
+        if (!isset($this->container)) {
+            $this->container = $this->build($type);
+        } else {
+            $class = FormBuilder::$elements[$type][0];
+            if (!is_a($this->container, $class)) {
+                $this->container = FormBuilder::convert($this->container, $type);
+            }
         }
         
-        return $html;
+        return $this->container;
     }
-    
+
     /**
-     * Get content of the element.
+     * Get element content
      * 
-     * @return string
+     * @return string|null
      */
-    final public function getContent()
+    public function getContent()
     {
         $content = $this->renderContent();
+        if (!isset($content)) return null;
         
         foreach ($this->getDecorators() as $decorator) {
             $content = $decorator->renderContent($this, $content);
         }
         
-        return $content;
+        return (string)$content;
     }
     
     
@@ -106,57 +99,45 @@ trait RenderPartial
      * 
      * @return string
      */
-    final public function render()
+    public function render()
     {
-        $label = $this->getLabel();
-        $control = $this->getControl();
+        $container = $this->getContainer()->clear();
         
-        $html = $this->renderContainer($label, $control);
+        // Label
+        if ($this->getOption('label')) {
+            if ($this->getOption('label') === 'inside') {
+                $element = $this->getLabel()->setAttr('for', null)->setContent($this->renderElement());
+            } else {
+                $label = $this->getLabel()->setContent($this->getDescription());
+                $label->setAttr('for', $this->getId());
+            }
+        }
+        if (isset($label)) $container->add($label);
         
-        foreach ($this->getDecorators() as $decorator) {
-            $html = $decorator->renderContainer($this, $html, $label, $control);
+        // Prepend
+        $prepend = $this->getOption('prepend');
+        if ($prepend) $container->add($this->getAppend()->setContent($prepend));
+        
+        // Element
+        if (!isset($element)) $element = $this->renderElement();
+        $container->add($element);
+        
+        // Append
+        $append = $this->getOption('append');
+        if ($append) $container->add($this->getAppend()->setContent($append));
+        
+        // Error
+        if (method_exists($this, 'getError')) {
+            $error = $this->getError();
+            if ($error) $this->begin('span', [], ['class'=>'error'])->setContent($error);
         }
         
-        return $html;
-    }
-    
-    /**
-     * Render the container.
-     * 
-     * @param string $label    HTML of the label
-     * @param string $control  HTML of the control
-     * @return string
-     */
-    protected function renderContainer($label, $control)
-    {
-        $html = ($label ? $label . "\n" : '') . $control;
+        // Validation script
+        if (method_exists($this, 'getValidationScript')) {
+            $container->add($this->getValidationScript());
+        }
         
-        // Put everything in a container
-        if ($this->getOption('container')) $html = "<div>\n{$html}\n</div>";
-        
-        return $html;
-    }
-    
-    /**
-     * Render the label.
-     * 
-     * @return string
-     */
-    protected function renderLabel()
-    {
-        return '<label for="' . $this->getId() . '">'
-            . $this->getDescription()
-            . '</label>';
-    }
-    
-    /**
-     * Render the content of the HTML element.
-     * 
-     * @return string
-     */
-    protected function renderContent()
-    {
-        return null;
+        return (string)$container;
     }
     
     /**
@@ -164,16 +145,15 @@ trait RenderPartial
      * 
      * @return string
      */
-    abstract protected function renderElement();    
+    abstract public function renderElement();
     
     /**
-     * Render the element control.
+     * Render the element content.
      * 
-     * @param string $el  HTML element
-     * @return string
+     * @return string|null
      */
-    protected function renderControl($el)
+    protected function renderContent()
     {
-        return $this->getPrepend() . $el . $this->getAppend();
+        return null;
     }
 }

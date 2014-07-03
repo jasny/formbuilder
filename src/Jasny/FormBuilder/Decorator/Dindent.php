@@ -20,35 +20,21 @@ class Dindent extends Decorator
      */
     protected $options;
     
-    /**
-     * Wether or not to indent each individual child node.
-     * @var boolean
-     */
-    protected $deep = false;
     
     /**
      * Class constructor
      * 
-     * @param array $options
+     * @param array   $options
+     * @param boolean $deep    Indent each individual child
      */
-    public function __construct(array $options=[])
+    public function __construct(array $options=[], $deep=false)
     {
         if (!class_exists('\Gajus\Dindent\Parser')) throw new Exception("Please add the Dindent library");
-        
+
         if (isset($options['spaces'])) $options += ['indentation_character' => str_repeat(' ', $options['spaces'])];
         $this->options = $options;
         
-        $this->deep = !empty($options['deep']);
-    }
-    
-    /**
-     * Wether or not to indent each individual child node.
-     * 
-     * @return boolean
-     */
-    public function isDeep()
-    {
-        return $this->deep;
+        $this->deep = $deep;
     }
     
     /**

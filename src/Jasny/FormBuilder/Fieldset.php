@@ -9,10 +9,14 @@ namespace Jasny\FormBuilder;
  */
 class Fieldset extends Group
 {
+    /** @var string */
+    const TAGNAME = 'fieldset';
+    
     /**
-     * @var string
+     * @var Legend
      */
-    protected $tagname = 'fieldset';
+    protected $legend;
+    
     
     /**
      * Class constructor.
@@ -26,25 +30,19 @@ class Fieldset extends Group
     }
     
     /**
-     * Set the legend of the fieldset.
-     * 
-     * @param string $legend
-     * @return Boostrap\Fieldset  $this
-     */
-    public function setLegend($legend)
-    {
-        $this->setOption('legend', $legend);
-        return $this;
-    }
-    
-    /**
      * Get the legend of the fieldset.
      * 
      * @return string
      */
     public function getLegend()
     {
-        return $this->getOption('legend');
+        if (!isset($this->legend)) {
+            $this->legend = new Legend();
+        }
+        
+        return $this->legend->setContent(function() {
+            return $this->getOption('legend');
+        });
     }
     
     /**
@@ -54,9 +52,6 @@ class Fieldset extends Group
      */
     public function open()
     {
-        $html = "<fieldset {$this->attr}>";
-        if ($this->getLegend()) $html .= "\n<legend>" . $this->getLegend() . "</legend>";
-        
-        return $html;
+        return "<fieldset {$this->attr}>" . $this->getLegend();
     }
 }

@@ -8,13 +8,29 @@ namespace Jasny\FormBuilder;
 class Attr extends \ArrayIterator
 {
     /**
+     * Class constructor
+     * 
+     * @param array $array
+     */
+    public function __construct($array = [])
+    {
+        $array += ['class' => []];
+        if (is_string($array['class'])) $array['class'] = preg_split('/\s+/', $array['class']);
+        
+        parent::__construct($array);
+    }
+    
+    /**
      * Cast the value of an attribute to a string.
      * 
+     * @param string $key
      * @param mixed  $value
      * @return string
      */
-    protected function cast($value)
+    protected function cast($key, $value)
     {
+        if ($key === 'class' && is_array($value)) return $this->castClass($value);
+        
         if ($value instanceof Control) $value = $value->getValue();
         if ($value instanceof \Closure) $value = $value();
         
@@ -26,7 +42,23 @@ class Attr extends \ArrayIterator
         
         return $value;
     }
-    
+
+    /**
+     * Cast the value of an attribute to a string.
+     * 
+     * @param array $values
+     * @return string
+     */
+    protected function castClass($values)
+    {
+        $classes = [];
+        foreach ($values as $value) {
+            $class = $this->cast(null, $value);
+            if ($class) $classes[] = $class;
+        }
+        
+        return !empty($classes) ? join(' ', array_unique($classes)) : null;
+    }
     
     /**
      * Set HTML attribute(s).
@@ -40,9 +72,9 @@ class Attr extends \ArrayIterator
         $attrs = is_string($attr) ? [$attr => $value] : $attr;
         foreach ($attrs as $key=>$value) {
             if (isset($value)) {
-                $this->offsetSet($key, $value);
-            } else {
-                $this->offsetUnset($key);
+                $this[$key] = $value;
+            } elseif ($this[$key]) {
+                unset($this[$key]);
             }
         }
         
@@ -58,7 +90,7 @@ class Attr extends \ArrayIterator
      */
     final public function get($attr=null)
     {
-        return isset($attr) ? $this->getOne($attr) : $this->getAll();
+        return isset($attr) ? $this[$attr] : $this->getAll();
     }
     
     /**
@@ -69,23 +101,10 @@ class Attr extends \ArrayIterator
      */
     final public function getRaw($attr=null)
     {
-        return isset($attr) ? $this->getOne($attr, true) : $this->getAll(true);
+        if (isset($attr)) return parent::offsetGet($attr);
+        return $this->getAll(true);
     }
     
-    /**
-     * Get a specific HTML attribute.
-     * 
-     * @param string  $attr
-     * @param boolean $raw   Don't cast attribute
-     * @return array
-     */
-    protected function getOne($attr, $raw=false)
-    {
-        if (!$this->offsetExists($attr)) return null;
-        
-        $value = parent::offsetGet($attr);
-        return $raw ? $value : $this->cast($value);
-    }
     
     /**
      * Get all HTML attributes.
@@ -95,13 +114,11 @@ class Attr extends \ArrayIterator
      */
     protected function getAll($raw=false)
     {
-        if ($raw) return $this->getArrayCopy();
-        
         $attrs = $this->getArrayCopy();
+        if ($raw) return $attrs;
         
         foreach ($attrs as $key=>&$value) {
-            $value = $this->cast($value);
-            if (!isset($value)) unset($attrs[$key]);
+            $value = $this->cast($key, $value);
         }
 
         return $attrs;
@@ -116,8 +133,13 @@ class Attr extends \ArrayIterator
      */
     public function hasClass($class)
     {
-        $attribute = $this->getOne('class');
-        return $attribute && in_array($class, explode(' ', $attribute));
+        $attr = parent::offsetGet('class');
+        
+        foreach ($attr as $cur) {
+            if ($this->cast(null, $cur) === $class) return true;
+        }
+        
+        return false;
     }
     
     /**
@@ -128,21 +150,12 @@ class Attr extends \ArrayIterator
      */
     public function addClass($class)
     {
-        $attribute = $this->getOne('class');
+        $attr = parent::offsetGet('class');
         
-        if (!$attribute) {
-            $this->set('class', is_array($class) ? join(' ', $class) : $class);
-        } else {
-            $classes = is_array($class) ? $class : explode(' ', $class);
-            
-            foreach ($classes as $class) {
-                if (!$this->hasClass($class)) $attribute .= ' ' . $class;
-            }
-            
-            $this->set('class', $attribute);
-        }
+        if (is_string($class)) $class = preg_split('/\s+/', $class);
+        if (!is_array($class)) $class = [$class];
         
-        return $this;
+        parent::offsetSet('class', array_merge($attr, $class));
     }
     
     /**
@@ -153,15 +166,14 @@ class Attr extends \ArrayIterator
      */
     public function removeClass($class)
     {
-        $attribute = $this->getOne('class');
+        $attr = parent::offsetGet('class');
+        if (!is_array($class)) $remove = preg_split('/\s+/', $class);
         
-        if ($attribute) {
-            $current = explode(" ", $attribute);
-            $remove = explode(" ", $class);
-
-            $this->set('class', join(' ', array_diff($current, $remove)));
+        foreach ($attr as $i=>$cur) {
+            if (in_array($this->cast(null, $cur), $remove)) unset($attr[$i]);
         }
         
+        parent::offsetSet('class', $attr);
         return $this;
     }
     
@@ -174,15 +186,15 @@ class Attr extends \ArrayIterator
      */
     public function render(array $override=[])
     {
-        foreach ($override as &$value) {
-            $value = $this->cast($value);
+        foreach ($override as $key=>&$value) {
+            $value = $this->cast($key, $value);
         }
         
         $attrs = $override + $this->getAll();
         
         $pairs = [];
         foreach ($attrs as $key=>$value) {
-            static::appendAttr($pairs, $key, $this->getOne($key));
+            static::appendAttr($pairs, $key, $value);
         }
         
         return join(' ', $pairs);
@@ -198,7 +210,7 @@ class Attr extends \ArrayIterator
     {
         $pairs = [];
         foreach ((array)$attrs as $key) {
-            static::appendAttr($pairs, $key, $this->getOne($key));
+            static::appendAttr($pairs, $key, $this[$key]);
         }
         
         return join(' ', $pairs);
@@ -216,16 +228,31 @@ class Attr extends \ArrayIterator
     
     
     /**
-     * Array access get
+     * Get value for an offset
      * 
-     * @param string $offset
+     * @param string $index
      * @return string
      */
-    final public function offsetGet($offset)
+    public function offsetGet($index)
     {
-        return $this->getOne($offset);
+        if (!parent::offsetExists($index)) return null;
+        
+        $value = parent::offsetGet($index);
+        return $this->cast($index, $value);
     }
 
+    /**
+     * Set value for an offset
+     * 
+     * @param string $index   The index to set for.
+     * @param string $newval  The new value to store at the index.
+     */
+    public function offsetSet($index, $newval)
+    {
+        if ($index === 'class' && is_string($newval)) $newval = preg_split('/\s+/', $newval);
+        parent::offsetSet($index, $newval);
+    }
+    
     /**
      * Append a value.
      * 

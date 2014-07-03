@@ -46,7 +46,7 @@ class Select extends Choice
      * 
      * @return string
      */
-    protected function renderElement()
+    public function renderElement()
     {
         return "<select {$this->attr}>\n" . $this->getContent() . "\n</select>";
     }

@@ -11,13 +11,6 @@ namespace Jasny\FormBuilder;
  */
 class Button extends Action
 {
-    /**
-     * Render the <button>.
-     * 
-     * @return string
-     */
-    protected function renderElement()
-    {
-        return "<button {$this->attr}>" . $this->getContent() . "</button>";
-    }
+    /** @var string */
+    const TAGNAME = 'button';
 }

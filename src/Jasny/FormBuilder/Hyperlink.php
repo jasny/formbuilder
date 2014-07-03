@@ -12,6 +12,9 @@ namespace Jasny\FormBuilder;
  */
 class Hyperlink extends Action
 {
+    /** @var string */
+    const TAGNAME = 'a';
+    
     /**
      * Class constructor.
      * 
@@ -46,15 +49,5 @@ class Hyperlink extends Action
     public function getUrl()
     {
         return $this->attr['href'];
-    }
-    
-    /**
-     * Render the link to HTML.
-     * 
-     * @return string
-     */
-    protected function renderElement()
-    {
-        return "<a {$this->attr}>" . $this->getContent() . "</a>";
     }
 }

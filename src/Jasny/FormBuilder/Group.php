@@ -2,25 +2,16 @@
 
 namespace Jasny\FormBuilder;
 
-use Jasny\FormBuilder;
-
 /**
- * Base class for an HTML child with children.
+ * Base class for an HTML element with children.
  */
 class Group extends Element
 {
     /**
-     * Overwrite element types for factory method
-     * @var array
-     */
-    protected static $customTypes = [];
-    
-    
-    /**
      * The HTML tag name.
      * @var string
      */
-    protected $tagname;
+    const TAGNAME = null;
     
     /**
      * Child nodes of the group.
@@ -28,46 +19,43 @@ class Group extends Element
      */
     protected $children = [];
     
+    
+    /**
+     * Add a decorator to the element.
+     * 
+     * @param Decorator|string $decorator  Decorator object or name
+     * @param mixed            $_          Additional arguments are passed to the constructor
+     * @return Element  $this
+     */
+    public function addDecorator($decorator)
+    {
+        // parent::addDecorator($decorator, ...$_);
+        call_user_func_array([get_parent_class(), 'addDecorator'], func_get_args());
+        
+        foreach ($this->getChildren() as $child) {
+            if ($this->getOption('decorate') === false) continue;
+            $decorator->apply($child, true);
+        }
+        
+        return $this;
+    }
 
     /**
-     * Class constructor.
+     * Apply decorators from parent
      * 
-     * @param array $options  Element options
-     * @param array $attr     HTML attributes
+     * @param Group $parent
      */
-    public function __construct(array $options = array(), array $attr = array())
+    protected function applyDeepDecorators($parent)
     {
-        parent::__construct($options, $attr);
+        if ($this->getOption('decorate') === false) return;
+        
+        parent::applyDeepDecorators($parent);
+        
+        foreach ($this->getChildren() as $child) {
+            $child->applyDeepDecorators($parent);
+        }
     }
     
-    
-    /**
-     * Factory method
-     * 
-     * @param string $type     Element type
-     * @param array  $options  Element options
-     * @param array  $attr     HTML attributes
-     * @return Element|Control
-     */
-    protected function build($type, array $options=[], array $attr=[])
-    {
-        if (isset(static::$customTypes[$type])) {
-            $custom = static::$customTypes[$type];
-            $type = $custom[0];
-            if (isset($custom[1])) $options = $custom[1] + $options;
-            if (isset($custom[2])) $attr = $custom[2] + $attr;
-        }
-        
-        if ($this->parent) return $this->parent->build($type, $options, $attr);
-        
-        if (is_string($type) && $type[0] === ':') {
-            $method = 'build' . str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]/', ' ', substr($type, 1))));
-            if (!method_exists($this, $method)) throw new \Exception("Unknown field '" . substr($type, 1) . "'");
-            return $this->$method(null, $options, $attr);
-        }
-        
-        return FormBuilder::element($type, $options, $attr);
-    }
     
     /**
      * Add an child to the group.
@@ -86,8 +74,10 @@ class Group extends Element
         }
         
         if ($child instanceof Element) $child->parent = $this;
-        
         $this->children[] = $child;
+        
+        if ($child instanceof Element) $child->applyDeepDecorators($this);
+        
         return $this;
     }
     
@@ -173,9 +163,9 @@ class Group extends Element
      * 
      * @return Control[]
      */
-    public function getElements()
+    public function getControls()
     {
-        $elements = array();
+        $elements = [];
         
         foreach ($this->children as $child) {
             if ($child instanceof Control) {
@@ -186,7 +176,7 @@ class Group extends Element
                     $elements[] = $child;
                 }
             } elseif ($child instanceof Group) {
-                $elements = array_merge($elements, $child->getElements());
+                $elements = array_merge($elements, $child->getControls());
             }
         }
         
@@ -205,6 +195,17 @@ class Group extends Element
         return $this;
     }
     
+    /**
+     * Remove all children
+     * 
+     * @return Group $this
+     */
+    public function clear()
+    {
+        $this->children = [];
+        return $this;
+    }
+    
     
     /**
      * Set the values of the elements.
@@ -216,7 +217,7 @@ class Group extends Element
     {
         $values = (array)$values;
 
-        foreach ($this->getElements() as $element) {
+        foreach ($this->getControls() as $element) {
             $name = $element->getName();
             if ($name && isset($values[$name])) $element->setValue($values[$name]);
         }
@@ -231,9 +232,9 @@ class Group extends Element
      */
     public function getValues()
     {
-        $values = array();
+        $values = [];
         
-        foreach ($this->getElements() as $element) {
+        foreach ($this->getControls() as $element) {
             if ($element->getName()) $values[$element->getName()] = $element->getValue();
         }
         
@@ -265,8 +266,8 @@ class Group extends Element
      */
     public function open()
     {
-        $this->applyDecorators();
-        return !empty($this->tagname) ? "<{$this->tagname} {$this->attr}>" : null;
+        $tagname = $this::TAGNAME;
+        return $tagname ? "<{$tagname} {$this->attr}>" : null;
     }
 
     /**
@@ -276,25 +277,26 @@ class Group extends Element
      */
     public function close()
     {
-        return !empty($this->tagname) ? "</{$this->tagname}>" : null;
+        $tagname = $this::TAGNAME;
+        return $tagname ? "</{$tagname}>" : null;
     }
-    
-    
+
     /**
-     * Get content of the element.
+     * Get the element content as HTML
      * 
      * @return string
      */
-    final public function getContent()
+    public function getContent()
     {
         $content = $this->renderContent();
         
         foreach ($this->getDecorators() as $decorator) {
-            $content = $decorator->renderContent($this, $content);
+            $decorator->renderContent($this, $content);
         }
         
-        return $content;
+        return (string)$content;
     }
+    
     
     /**
      * Render the content of the HTML element.
@@ -304,12 +306,12 @@ class Group extends Element
     protected function renderContent()
     {
         $items = [];
-        
+
         foreach ($this->children as $child) {
             if (!isset($child) || ($child instanceof Element && !$child->getOption('render'))) continue;
-            $items[] = (string)$child;
+            $items[] = $child instanceof Element ? $child = $child->toHTML() : $child;
         }
-        
+
         return join("\n", $items);
     }
     

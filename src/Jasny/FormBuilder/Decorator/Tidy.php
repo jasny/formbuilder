@@ -11,12 +11,6 @@ use Jasny\FormBuilder\Decorator;
 class Tidy extends Decorator
 {
     /**
-     * Wether or not to tidy each individual child node.
-     * @var boolean
-     */
-    protected $deep;
-    
-    /**
      * Tidy configuration
      * @var array
      */
@@ -29,8 +23,8 @@ class Tidy extends Decorator
     /**
      * Class constructor.
      * 
-     * @param array $config  Tidy configuration
-     * @param boolean $deep  Wether or not to tidy each individual child node.
+     * @param array   $config  Tidy configuration
+     * @param boolean $deep    Tidy each individual child
      */
     public function __construct(array $config=[], $deep=false)
     {
@@ -39,20 +33,10 @@ class Tidy extends Decorator
     }
     
     /**
-     * Wether or not to tidy each individual child node.
-     * 
-     * @return boolean
-     */
-    public function isDeep()
-    {
-        return $this->deep;
-    }
-    
-    /**
      * Render to HTML
      * 
-     * @param Element   $element
-     * @param string $html  Original rendered html
+     * @param Element $element
+     * @param string  $html     Original rendered html
      * @return string
      */
     public function render($element, $html)

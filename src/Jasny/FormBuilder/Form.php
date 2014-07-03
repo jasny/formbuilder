@@ -10,10 +10,9 @@ namespace Jasny\FormBuilder;
  */
 class Form extends Group
 {
-    /**
-     * @var string
-     */
-    protected $tagname = 'form';
+    /** @var string */
+    const TAGNAME = 'form';
+
     
     /**
      * Class constructor.

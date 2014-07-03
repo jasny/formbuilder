@@ -10,6 +10,13 @@ use Jasny\FormBuilder;
 abstract class Element
 {
     /**
+     * Overwrite element types for factory method
+     * @var array
+     */
+    protected static $customTypes = [];
+    
+    
+    /**
      * Decorators
      * @var Decorator[]
      */
@@ -51,49 +58,48 @@ abstract class Element
         if (isset($options['id'])) $attr['id'] = $options['id'];
         unset($options['id']);
         
+        $this->options = $options + $this->options + ['decorate'=>true];
+        foreach ($this->options as $key=>$value) {
+            if (!isset($value)) unset($this->options[$key]);
+        }
+        
         $this->attr = new Attr($attr + $this->attr);
-        $this->options = array_merge($this->options, $options);
     }
+    
     
     
     /**
      * Add a decorator to the element.
      * 
      * @param Decorator|string $decorator  Decorator object or name
-     * @param array            $options
+     * @param mixed            $_          Additional arguments are passed to the constructor
      * @return Element  $this
      */
-    public function addDecorator($decorator, array $options=[])
+    public function addDecorator($decorator)
     {
         if (!$decorator instanceof Decorator) {
-            $decorator = FormBuilder::decorator($decorator, $options);
+            $args = func_get_args();
+            $decorator = call_user_func_array(['\Jasny\FormBuilder', 'decorator'], $args);
         }
         
-        $decorator->connect($this);
+        $decorator->apply($this, false);
         $this->decorators[] = $decorator;
         
         return $this;
     }
 
     /**
-     * Apply modifications by decorators
-     */
-    protected function applyDecorators()
-    {
-        foreach ($this->getDecorators() as $decorator) {
-            $decorator->apply($this);
-        }
-    }
-    
-    /**
-     * Add a decorator to the node.
+     * Apply decorators from parent
      * 
-     * @param Decorator|string $decorator  Decorator object or name
-     * @return Element  $this
+     * @param Group $parent
      */
-    public function disableDecorator($decorator)
+    protected function applyDeepDecorators($parent)
     {
-        $this->disabledDecorators[] = $decorator;
+        if ($this->getOption('decorate') === false) return;
+        
+        foreach ($parent->getDecorators() as $decorator) {
+            if ($decorator->isDeep()) $decorator->apply($this, true);
+        }
     }
     
     /**
@@ -103,29 +109,44 @@ abstract class Element
      */
     public function getDecorators()
     {
-        // Get deep decorators from parent
-        $deepDecorators = [];
-        if ($this->getParent()) {
+        $decorators = $this->decorators;
+
+        if ($this->getOption('decorate') !== false && $this->getParent()) {
             foreach ($this->getParent()->getDecorators() as $decorator) {
-                if ($decorator->isDeep()) $deepDecorators[] = $decorator;
-            }
-        }
-        
-        // Add our decorators
-        $decorators = array_merge($deepDecorators, $this->decorators);
-        
-        // Remove disabled decorators
-        foreach ($this->disabledDecorators as $decorator) {
-            if (is_string($decorator)) $class = FormBuilder::$decorators[$decorator][0];
-        
-            foreach ($decorators as $i => $cur) {
-                if (isset($class) ? is_a($cur, $class) : $cur === $decorator) {
-                    unset($decorators[$i]);
-                }
+                if ($decorator->isDeep()) $decorators[] = $decorator;
             }
         }
         
         return $decorators;
+    }
+    
+    
+    /**
+     * Factory method
+     * 
+     * @param string $type     Element type
+     * @param array  $options  Element options
+     * @param array  $attr     HTML attributes
+     * @return Element|Control
+     */
+    public function build($type, array $options=[], array $attr=[])
+    {
+        if (isset(static::$customTypes[$type])) {
+            $custom = static::$customTypes[$type];
+            $type = $custom[0];
+            if (isset($custom[1])) $options = $custom[1] + $options;
+            if (isset($custom[2])) $attr = $custom[2] + $attr;
+        }
+        
+        if ($this->parent) return $this->parent->build($type, $options, $attr);
+        
+        if (is_string($type) && $type[0] === ':') {
+            $method = 'build' . str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]/', ' ', substr($type, 1))));
+            if (!method_exists($this, $method)) throw new \Exception("Unknown field '" . substr($type, 1) . "'");
+            return $this->$method(null, $options, $attr);
+        }
+        
+        return FormBuilder::element($type, $options, $attr);
     }
     
     
@@ -282,6 +303,12 @@ abstract class Element
      */
     public function setOption($option, $value=null)
     {
+        if ($option === 'decorate' && $this->getParent()) {
+            $name = $this->getName();
+            trigger_error("You should set the 'decorate' option before adding "
+                . ($name ? "element '$name'" : "an element") . " to a form or group", E_USER_WARNING);
+        }
+        
         if (is_array($option)) {
             foreach ($option as $key=>$value) {
                 if (!isset($value)) {
@@ -352,7 +379,10 @@ abstract class Element
      * 
      * @return boolean
      */
-    abstract protected function validate();
+    protected function validate()
+    {
+        return true;
+    }
     
     
     /**
@@ -369,8 +399,6 @@ abstract class Element
      */
     final public function toHTML()
     {
-        $this->applyDecorators();
-        
         $html = $this->render();
         
         foreach ($this->getDecorators() as $decorator) {
