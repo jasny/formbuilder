@@ -208,7 +208,7 @@ abstract class Element
                 $id = base_convert(uniqid(), 16, 32);
             }
 
-            $this->setOptions('id', $id);
+            $this->setOption('id', $id);
         }
         
         return $this->getOption('id');

@@ -12,6 +12,16 @@ namespace Jasny\FormBuilder;
 abstract class Choice extends Control
 {
     /**
+     * Return list items
+     * 
+     * @return array
+     */
+    public function getItems()
+    {
+        return $this->getOption('items') ?: [];
+    }
+    
+    /**
      * Set the value of the control.
      * 
      * @param string $value

@@ -55,6 +55,17 @@ abstract class Control extends Element
     
     
     /**
+     * Get the description of the element.
+     * 
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->getOption('description') ?:
+            ucfirst(preg_replace(['/^.+[\.\[]|\]/', '/[_-]/'], ['', ' '], $this->getName()));
+    }
+    
+    /**
      * Set the value of the element.
      * 
      * @param mixed $value

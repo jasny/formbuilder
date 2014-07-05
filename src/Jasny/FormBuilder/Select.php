@@ -32,6 +32,7 @@ class Select extends Choice
      */
     protected function renderContent()
     {
+        $items = $this->getItems();
         $value = $this->getValue();
         $selected_first = (boolean)$this->getOption('selected-first');
         
@@ -44,7 +45,7 @@ class Select extends Choice
                 . htmlentities($placeholder) . "</option>\n";
         }
         
-        foreach ($this->items as $key=>$val) {
+        foreach ($items as $key=>$val) {
             $selected = !is_array($value) ? (string)$key === (string)$value : in_array($key, $value);
             $opt = "<option value=\"" . htmlentities($key) . "\"" . ($selected ? ' selected' : '') . ">"
                 . htmlentities($val) . "</option>\n";
