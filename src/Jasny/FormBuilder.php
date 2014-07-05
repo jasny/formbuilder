@@ -16,13 +16,12 @@ class FormBuilder
      */
     public static $options = [
         'render' => true,              // Render element
-        'basic-validation' => true,    // Server-side validation
+        'validate' => true,            // Server-side validation
         'validation-script' => true,   // Include <script> for validation that isn't supported by HTML5
         'add-hidden' => true,          // Add hidden input for checkbox inputs
         'required-suffix' => ' *',     // Suffix label for required controls
         'container' => 'div',          // Place each form element in a container
         'label' => true,               // Add a label for each form element
-        'inside-label'=>false,         // Put element inside a label
         
         'error:required' => "Please fill out this field",
         'error:type' => "Please enter a {{type}}",
@@ -147,7 +146,6 @@ class FormBuilder
         $attr = $element->attr;
         
         $new = $element->build($type, $options);
-        
         
         if ($element instanceof Group && $new instanceof Group) {
             $children = $element->getChildren();

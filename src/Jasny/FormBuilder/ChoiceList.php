@@ -5,8 +5,8 @@ namespace Jasny\FormBuilder;
 /**
  * Representation of a set of radio buttons or checkboxes in a form.
  * 
- * @option selected-first  Put the selected option(s) on top of the list
- * @option single-line     Put all items on a single line
+ * @option boolean single-line  Put all items on a single line
+ * @option boolean add-hidden   Add hidden input so a value is send when nothing is checked
  */
 class ChoiceList extends Choice
 {
@@ -20,6 +20,8 @@ class ChoiceList extends Choice
     {
         parent::__construct($options, $attr);
         $this->addClass('choicelist');
+        
+        unset($this->attr['name'], $this->attr['multiple'], $this->attr['required']);
     }
     
     /**
@@ -30,9 +32,9 @@ class ChoiceList extends Choice
     protected function renderContent()
     {
         $this->getId();
-        $name = $this->getAttr('name');
+        $name = $this->getName();
         $value = $this->getValue();
-        $required = $this->getAttr('required');
+        $required = $this->getOption('required');
         $type = $this->getOption('multiple') ? 'checkbox' : 'radio';
 
         $selected_first = (boolean)$this->getOption('selected-first');
@@ -50,12 +52,15 @@ class ChoiceList extends Choice
             
             if (!$single_line) $input = '<div>' . $input . '</div>';
             
-            if ($selected && $selected_first) $inputs_first[] = $input;
-             else $inputs[] = $input;
+            if ($selected && $selected_first) {
+                $inputs_first[] = $input;
+            } else {
+                $inputs[] = $input;
+            }
         }
         
         $hidden = $type === 'checkbox' && $this->getOption('add-hidden') ?
-            '<input type="hidden" name="' . htmlentities($this->getName()) . '" value="">' . "\n" : '';
+            '<input type="hidden" name="' . htmlentities($name) . '" value="">' . "\n" : '';
         
         return $hidden . join("\n", array_merge($inputs_first, $inputs));
     }
@@ -70,7 +75,7 @@ class ChoiceList extends Choice
         if ($this->getOption('single-line')) $this->addClass('choicelist-single-line');
         
         // Build html control
-        return "<div " . $this->attr->render(['name'=>null, 'multiple'=>null, 'required'=>null]) . ">\n"
+        return "<div " . $this->attr->render() . ">\n"
             . $this->getContent() . "\n"
             . "</div>";
     }

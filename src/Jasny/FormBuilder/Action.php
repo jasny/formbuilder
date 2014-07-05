@@ -23,25 +23,14 @@ abstract class Action extends Element
     
     
     /**
-     * Set the description of the element.
-     * 
-     * @param string $description
-     * @return Control $this
-     */
-    final public function setDescription($description)
-    {
-        $this->setOption('description', $description);
-        return $this;
-    }
-    
-    /**
      * Get the description of the element.
      * 
      * @return string
      */
-    final public function getDescription()
+    public function getDescription()
     {
-        return $this->getOption('description');
+        return $this->getOption('description') ?:
+            ucfirst(preg_replace(['/^.+[\.\[]|\]/', '/[_-]/'], ['', ' '], $this->getName()));
     }
     
         

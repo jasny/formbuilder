@@ -5,11 +5,26 @@ namespace Jasny\FormBuilder;
 /**
  * Representation of a <select> element.
  * 
- * Options
- *  - selected-first  Put the selected option(s) on top of the list
+ * @option string placeholder  First <option> with empty value
  */
 class Select extends Choice
 {
+    /**
+     * Class constructor.
+     * 
+     * @param array $options  Element options
+     * @param array $attr     HTML attributes
+     */
+    public function __construct(array $options=[], array $attr=[])
+    {
+        if (!isset($attr['multiple'])) $attr['multiple'] = function() {
+            return (boolean)$this->getOption('multiple');
+        };
+        
+        return parent::__construct($options, $attr);
+    }
+    
+    
     /**
      * Render the content of the HTML element.
      * 

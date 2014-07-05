@@ -4,11 +4,24 @@ namespace Jasny\FormBuilder;
 
 /**
  * Base class of form control elements.
+ * 
+ * @option description
+ * @option required         Value is required
+ * @option required-suffix  Suffix added to label if required
+ * @option validate         Perform server side validation (default true)
+ * @option container        Element type for container
+ * @option label            Display a label (true, false or 'inside')
  */
 abstract class Control extends Element
 {
     use RenderPartial;
     use BasicValidation;
+    
+    /**
+     * Control value
+     * @var string
+     */
+    protected $value;
     
     /**
      * Error message
@@ -25,38 +38,21 @@ abstract class Control extends Element
      */
     public function __construct(array $options=[], array $attr=[])
     {
-        if (isset($options['name'])) $attr['name'] = $options['name'];
-        if (isset($options['required'])) $attr['required'] = $options['required'];
+        if (!isset($attr['name'])) $attr['name'] = function() {
+            return $this->getName() . ($this->getOption('multiple') ? '[]' : '');
+        };
         
-        if (!isset($options['description']) && isset($attr['name'])) {
-            $options['description'] = ucfirst(preg_replace(['/^.+\./', '/[_-]/'], ['', ' '], $attr['name']));
-        }
+        if (!isset($attr['value'])) $attr['value'] = function() {
+            return $this->getValue();
+        };
         
-        unset($options['name'], $options['required']);
+        if (!isset($attr['required'])) $attr['required'] = function() {
+            return $this->getOption('required');
+        };
+        
         parent::__construct($options, $attr);
     }
     
-    
-    /**
-     * Set the name of the element.
-     * 
-     * @param string $name
-     * @return Control $this
-     */
-    public function setName($name)
-    {
-        return $this->attr['name'] = $name;
-    }
-    
-    /**
-     * Return the name of the control.
-     * 
-     * @return string
-     */
-    public function getName()
-    {
-        return preg_replace('/\[\]$/', '', $this->attr['name']);
-    }
     
     /**
      * Set the value of the element.
@@ -64,63 +60,25 @@ abstract class Control extends Element
      * @param mixed $value
      * @return Control $this
      */
-    abstract public function setValue($value);
+    public function setValue($value)
+    {
+        foreach ($this->getDecorators() as $decorator) {
+            $value = $decorator->filter($this, $value);
+        }
+        
+        return $this->value = $value;
+    }
     
     /**
      * Get the value of the element.
      * 
      * @return mixed
      */
-    abstract public function getValue();
-    
-    /**
-     * Set the description of the element.
-     * 
-     * @param string $description
-     * @return Control $this
-     */
-    final public function setDescription($description)
+    public function getValue()
     {
-        $this->setOption('description', $description);
-        return $this;
+        return $this->value;
     }
     
-    /**
-     * Get the description of the element.
-     * 
-     * @return string
-     */
-    final public function getDescription()
-    {
-        return $this->getOption('description');
-    }
-    
-    /**
-     * Get all options.
-     * 
-     * @return array
-     */
-    public function getOptions()
-    {
-        $options = parent::getOptions();
-        
-        if (!isset($this->options['label']) && empty($this->options['description'])) {
-            $options['label'] = false;
-        }
-        
-        return $options;
-    }
-
-    
-    /**
-     * Get the error message (after validation).
-     * 
-     * @return string
-     */
-    public function getError()
-    {
-        return $this->error;
-    }
     
     /**
      * Set the error message.
@@ -133,6 +91,15 @@ abstract class Control extends Element
         $this->error = trim($this->parse($error));
     }
     
+    /**
+     * Get the error message (after validation).
+     * 
+     * @return string
+     */
+    public function getError()
+    {
+        return $this->error;
+    }
     
     /**
      * Get a value for a placeholder

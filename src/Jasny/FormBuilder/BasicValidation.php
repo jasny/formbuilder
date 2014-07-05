@@ -17,7 +17,7 @@ trait BasicValidation
      */
     protected function validateRequired()
     {
-        if ($this->getAttr('required')) {
+        if ($this->getOption('required')) {
             $value = $this->getValue();
             if ($value === null || $value === '') {
                 $this->error = $this->setError($this->getOption('error:required'));
@@ -37,13 +37,13 @@ trait BasicValidation
     {
         $value = $this->format($this->getValue());
         
-        $min = $this->getAttr('min');
+        $min = $this->getOption('min');
         if (isset($min) && $min !== false && $value < $min) {
             $this->setError($this->getOption('error:min'));
             return false;
         }
         
-        $max = $this->getAttr('max');
+        $max = $this->getOption('max');
         if (isset($max) && $max !== false && $value > $max) {
             $this->setError($this->getOption('error:max'));
             return false;
@@ -61,13 +61,13 @@ trait BasicValidation
     {
         $value = $this->getValue();
         
-        $minlength = $this->getAttr('minlength') ?: $this->getAttr('data-minlength');
+        $minlength = $this->getOption('minlength') ?: $this->getOption('data-minlength');
         if (isset($minlength) && $minlength !== false && strlen($value) > $minlength) {
             $this->setError($this->getOption('error:minlength'));
             return false;
         }
         
-        $maxlength = $this->getAttr('maxlength');
+        $maxlength = $this->getOption('maxlength');
         if (isset($maxlength) && $maxlength !== false && strlen($value) > $maxlength) {
             $this->setError($this->getOption('error:maxlength'));
             return false;
@@ -83,8 +83,8 @@ trait BasicValidation
      */
     protected function validatePattern()
     {
-        $pattern = $this->getAttr('pattern');
-        if ($pattern && !preg_match('/' . str_replace('/', '\/', $pattern) . '/', $this->getValue())) {
+        $pattern = $this->getOption('pattern');
+        if ($pattern && !preg_match('/' . str_replace('/', '\/', $pattern) . '/A', $this->getValue())) {
             $this->setError($this->getOption('error:pattern'));
             return false;
         }
@@ -341,17 +341,10 @@ SCRIPT;
      */
     protected function getValidationScriptMinlength()
     {
-        $attr = 'minlength';
-        $minlength = $this->getAttr('minlength');
-        
-        if (!$minlength) {
-            $attr = 'data-minlength';
-            $minlength = $this->getAttr('data-minlength');
-        }
-        
+        $minlength = $this->getOption('minlength');
         if (!isset($minlength)) return null;
         
-        return 'this.value.length >= this.getAttribute("' . $attr . '")';
+        return 'this.value.length >= ' . $minlength;
     }
     
     /**
@@ -394,8 +387,8 @@ SCRIPT;
             $var = $var[1];
         }
         
-        if ($this->getAttr($var) !== null) {
-            return '" + this.getAttribute("' . addcslashes($var, '"') . '") + "';
+        if ($this->getOption($var) !== null) {
+            return '" + this.getOptionibute("' . addcslashes($var, '"') . '") + "';
         }
         
         switch ($var) {

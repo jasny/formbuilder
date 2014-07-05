@@ -6,6 +6,9 @@ use Jasny\FormBuilder;
 
 /**
  * Base class for HTML elements.
+ * 
+ * @option id    Element id
+ * @option name  Element name  
  */
 abstract class Element
 {
@@ -55,8 +58,9 @@ abstract class Element
      */
     public function __construct(array $options=[], array $attr=[])
     {
-        if (isset($options['id'])) $attr['id'] = $options['id'];
-        unset($options['id']);
+        if (!isset($attr['id'])) $attr['id'] = function() {
+            return $this->getId();
+        };
         
         $this->options = $options + $this->options + ['decorate'=>true];
         foreach ($this->options as $key=>$value) {
@@ -65,7 +69,6 @@ abstract class Element
         
         $this->attr = new Attr($attr + $this->attr);
     }
-    
     
     
     /**
@@ -127,7 +130,7 @@ abstract class Element
      * @param string $type     Element type
      * @param array  $options  Element options
      * @param array  $attr     HTML attributes
-     * @return Element|Control
+     * @return Element
      */
     public function build($type, array $options=[], array $attr=[])
     {
@@ -193,33 +196,22 @@ abstract class Element
      */
     public function getId()
     {
-        if (!isset($this->attr['id'])) {
+        if (!$this->getOption('id')) {
             $form = $this->getForm();
             
             if ($form) {
                 $name = $this->getName();
                 $id = $this->getForm()->getId() . '-' . ($name ?
-                    preg_replace('/[^\w\-]/', '', str_replace('[', '-', $name)) :
+                    preg_replace('/[^\w\-]/', '', strtr($name, '[.', '--')) :
                     base_convert(uniqid(), 16, 32));
             } else {
-                $id =  base_convert(uniqid(), 16, 32);
+                $id = base_convert(uniqid(), 16, 32);
             }
 
-            $this->attr['id'] = $id;
+            $this->setOptions('id', $id);
         }
         
-        return $this->attr['id'];
-    }
-    
-    /**
-     * Set the name of the element.
-     * 
-     * @param string $name
-     * @return Control $this
-     */
-    public function setName($name)
-    {
-        return $this->setOption('name', $name);
+        return $this->getOption('id');
     }
     
     /**
@@ -231,6 +223,7 @@ abstract class Element
     {
         return $this->getOption('name');
     }
+    
     
     /**
      * Set HTML attribute(s).
@@ -364,6 +357,8 @@ abstract class Element
      */
     final public function isValid()
     {
+        if ($this->getOption('validate') == false) return true;
+        
         $valid = $this->validate();
         
         // Apply changes to optoins

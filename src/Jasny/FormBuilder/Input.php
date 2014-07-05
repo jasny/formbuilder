@@ -5,23 +5,20 @@ namespace Jasny\FormBuilder;
 /**
  * Representation of an <input> element in a form.
  * 
- * @option string id           Element id
- * @option string name         Element name
- * @option string description  Description as displayed on the label
- * @option string type         HTML5 input type
- * @option mixed  value        Element value
+ * @option string    type       HTML5 input type
+ * @option boolean   multiple   Allow multiple files (only for type="file")
+ * @option boolean   hidden     Add hidden input for checkbox
+ * @option int|float min        Minimum value
+ * @option int|float max        Maximum value
+ * @option int       minlength  Minimum string length
+ * @option int       maxlength  Maximum string length
+ * @option string    pattern    Regexp pattern that value should match
+ * @option Control   match      Match value of other element (retype password)
  * 
  * @todo Support multiple file upload
  */
 class Input extends Control
 {
-    /**
-     * Upload data. Only used for <input type="file">.
-     * @var array
-     */
-    protected $upload;
-    
-    
     /**
      * Class constructor.
      * 
@@ -30,28 +27,41 @@ class Input extends Control
      */
     public function __construct(array $options=[], array $attr=[])
     {
-        if (isset($options['value'])) $attr['value'] = $options['value'];
-        if (isset($options['type'])) $attr['type'] = $options['type'];
-        $attr += $this->attr + ['type'=>'text'];
-
-        if ($attr['type'] === 'checkbox' && !isset($attr['value'])) $attr['value'] = 1;
-
-        if (in_array($attr['type'], ['button', 'submit', 'reset']) && !isset($attr['value'])) {
+        if (!isset($options['type'])) $options['type'] = 'text';
+        $type = $options['type'];
+        
+        $options += $this->getDefaultOptions($type);
+        
+        if (!isset($attr['type'])) $attr['type'] = function() {
+            return $this->getType();
+        };
+        
+        if ($type === 'checkbox' || $type === 'radio') {
+            if (!isset($attr['value'])) $attr['value'] = 1;
+            if (!isset($attr['checked'])) $attr['checked'] = function() {
+                return (bool)$this->getValue();
+            };
+        }
+        
+        if (in_array($type, ['button', 'submit', 'reset']) && !isset($attr['value'])) {
             $attr['value'] = function() {
                 return $this->getDescription();
             };
         }
         
         $noPlaceholder = ['hidden', 'button', 'submit', 'reset', 'checkbox', 'radio', 'file'];
-        if (!in_array($attr['type'], $noPlaceholder) && !isset($attr['placeholder'])) {
+        if (!in_array($type, $noPlaceholder) && !isset($attr['placeholder'])) {
             $attr['placeholder'] = function() {
                 return $this->getOption('label') ? null : $this->getDescription();
             };
         }
         
-        $options += $this->getDefaultOptions($attr['type']);
+        foreach (['min', 'max', 'maxlength', 'pattern'] as $opt) {
+            $attr[$opt] = function () use($opt) {
+                return $this->getOption($opt);
+            };
+        }
         
-        unset($options['type'], $options['value']);
         parent::__construct($options, $attr);
     }
     
@@ -83,60 +93,14 @@ class Input extends Control
         return $options;
     }
     
-    
     /**
      * Get HTML5 input type
      * 
      * @return string
      */
-    final public function getType()
+    public function getType()
     {
-        return $this->attr['type'];
-    }
-    
-    /**
-     * Get the value of the control.
-     * 
-     * @return mixed
-     */
-    public function getValue()
-    {
-        $type = $this->attr['type'];
-        if ($type === 'file') return $this->upload;
-        
-        $value = $this->attr['value'];
-        if ($value instanceof Control) $value = $value->getValue();
-
-        if (($type === 'checkbox' || $type === 'radio') && !$this->attr['checked']) $value = false;
-        
-        return $value;
-    }
-    
-    /**
-     * Set the value of the control.
-     * 
-     * @param mixed $value
-     * @return Control $this
-     */
-    public function setValue($value)
-    {
-        switch ($this->attr['type']) {
-            case 'file':
-                $this->upload = $value;
-            case 'checkbox':
-                $checked = (boolean)$value;
-                $this->attr['checked'] = $checked;
-                if ($checked && !is_bool($value)) $this->attr['value'] = $value;
-                break;
-            case 'radio':
-                $this->attr['checked'] = ($value == $this->attr['value']);
-                break;
-            default:
-                $this->attr['value'] = $value;
-                break;
-        }
-        
-        return $this;
+        return $this->getOption('type');
     }
     
     
@@ -147,14 +111,13 @@ class Input extends Control
      */
     protected function validate()
     {
-        if (!$this->getOption('basic-validation')) return true;
-        
         if (!$this->validateRequired()) return false;
 
         // Empty and not required, means no further validation
         if ($this->getValue() === null || $this->getValue() === '') return true;
 
-        if ($this->attr['type'] === 'file' && !$this->validateUpload()) return false;
+        if ($this->getType() === 'file') return $this->validateUpload();
+        
         if (!$this->validateType()) return false;
         if (!$this->validateMinMax()) return false;
         if (!$this->validateLength()) return false;
@@ -176,8 +139,7 @@ class Input extends Control
     {
         // Determine default options and attributes
         if ($this->attr['type'] === 'checkbox' && $this->getOption('add-hidden')) {
-            $name = htmlentities($this->attr['name']);
-            $el = '<input type="hidden" name="' . $name . '" value="">' . "\n" . $el;
+            $el = '<input type="hidden" value=""' . $this->attr->renderOnly(['name']) . '>' . "\n" . $el;
         }
 
         return parent::renderControl($el);

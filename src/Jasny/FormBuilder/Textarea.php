@@ -4,20 +4,9 @@ namespace Jasny\FormBuilder;
 
 /**
  * Representation of a <textarea> element.
- * 
- * @option id           Element id
- * @option name         Element name
- * @option description  Description as displayed on the label
- * @option type         HTML5 input type
- * @option value        Element value
  */
 class Textarea extends Control
 {
-    /**
-     * @var string
-     */
-    protected $value;
-    
     /**
      * Class constructor.
      * 
@@ -26,38 +15,11 @@ class Textarea extends Control
      */
     public function __construct(array $options=[], array $attr=[])
     {
-        if (isset($options['value'])) $this->value = $options['value'];
+        if (!isset($attr['placeholder'])) $attr['placeholder'] = function() {
+            return $this->getOption('label') ? null : $this->getDescription();
+        };
         
-        if (!isset($attr['placeholder'])) {
-            $attr['placeholder'] = function() {
-                return $this->getOption('label') ? null : $this->getDescription();
-            };
-        }
-        
-        unset($options['value']);
         parent::__construct($options, $attr);
-    }
-    
-    /**
-     * Get the value of the control.
-     * 
-     * @return string
-     */
-    public function getValue()
-    {
-        return $this->value;
-    }
-    
-    /**
-     * Set the value of the control.
-     * 
-     * @param string $value
-     * @return Control $this
-     */
-    public function setValue($value)
-    {
-        $this->value = $value;
-        return $this;
     }
     
 
@@ -68,8 +30,6 @@ class Textarea extends Control
      */
     public function validate()
     {
-        if (!$this->getOption('basic-validation')) return true;
-        
         if (!$this->validateRequired()) return false;
         
         // Empty and not required, means no further validation
@@ -88,6 +48,6 @@ class Textarea extends Control
      */
     public function renderElement()
     {
-        return "<textarea {$this->attr}>" . $this->getValue() . "</textarea>";
+        return "<textarea {$this->attr}>" . htmlentities($this->getValue()) . "</textarea>";
     }
 }
