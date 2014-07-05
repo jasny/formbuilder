@@ -139,7 +139,7 @@ class Input extends Control
     {
         // Determine default options and attributes
         if ($this->attr['type'] === 'checkbox' && $this->getOption('add-hidden')) {
-            $el = '<input type="hidden" value=""' . $this->attr->renderOnly(['name']) . '>' . "\n" . $el;
+            $el = '<input type="hidden" value="" ' . $this->attr->renderOnly(['name']) . '>' . "\n" . $el;
         }
 
         return parent::renderControl($el);
