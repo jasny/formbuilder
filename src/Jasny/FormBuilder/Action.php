@@ -21,7 +21,6 @@ abstract class Action extends Element
         parent::__construct($options, $attrs);
     }
     
-    
     /**
      * Get the description of the element.
      * 
@@ -29,10 +28,8 @@ abstract class Action extends Element
      */
     public function getDescription()
     {
-        return $this->getOption('description') ?:
-            ucfirst(preg_replace(['/^.+[\.\[]|\]/', '/[_-]/'], ['', ' '], $this->getName()));
+        return $this->getOption('description');
     }
-    
         
     /**
      * Validate the element.
