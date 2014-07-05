@@ -196,7 +196,7 @@ abstract class Element
      */
     public function getId()
     {
-        if (!$this->getOption('id')) {
+        if (!isset($this->options['id'])) {
             $form = $this->getForm();
             
             if ($form) {
@@ -208,10 +208,10 @@ abstract class Element
                 $id = base_convert(uniqid(), 16, 32);
             }
 
-            $this->setOption('id', $id);
+            $this->options['id'] = $id;
         }
         
-        return $this->getOption('id');
+        return $this->options['id'];
     }
     
     /**
