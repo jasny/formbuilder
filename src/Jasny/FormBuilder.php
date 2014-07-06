@@ -131,33 +131,4 @@ class FormBuilder
         $refl = new \ReflectionClass($class);
         return $refl->newInstanceArgs($args);
     }
-    
-    
-    /**
-     * Convert an element to another type.
-     * 
-     * @param Element $element
-     * @param string  $type
-     * @return Element
-     */
-    public static function convert($element, $type)
-    {
-        $options = $element->getOptions();
-        $attr = $element->attr;
-        
-        $new = $element->build($type, $options);
-        
-        if ($element instanceof Group && $new instanceof Group) {
-            $children = $element->getChildren();
-            foreach ($children as $child) {
-                $new->add($child);
-            }
-        }
-        
-        foreach ($element->getDecorators() as $decorator) {
-            $new->addDecorator($decorator);
-        }
-        
-        return $new;
-    }
 }

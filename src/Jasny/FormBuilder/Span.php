@@ -5,7 +5,7 @@ namespace Jasny\FormBuilder;
 /**
  * Div element
  */
-class Span extends Node
+class Span extends Element
 {
     /** @var string */
     const TAGNAME = 'span';

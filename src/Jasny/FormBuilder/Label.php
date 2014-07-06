@@ -5,7 +5,7 @@ namespace Jasny\FormBuilder;
 /**
  * Div element
  */
-class Label extends Node
+class Label extends Element
 {
     /** @var string */
     const TAGNAME = 'label';

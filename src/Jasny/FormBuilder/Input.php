@@ -130,28 +130,19 @@ class Input extends Control
     
 
     /**
-     * Render the element field to HTML.
-     * 
-     * @param string $el  HTML element
-     * @return string
-     */
-    public function renderControl($el)
-    {
-        // Determine default options and attributes
-        if ($this->attr['type'] === 'checkbox' && $this->getOption('add-hidden')) {
-            $el = '<input type="hidden" value="" ' . $this->attr->renderOnly(['name']) . '>' . "\n" . $el;
-        }
-
-        return parent::renderControl($el);
-    }
-
-    /**
      * Render the <input>.
      * 
      * @return string
      */
     public function renderElement()
     {
-        return "<input {$this->attr}>";
+        $el = "<input {$this->attr}>";
+        
+        // Add hidden input for checkbox
+        if ($this->attr['type'] === 'checkbox' && $this->getOption('add-hidden')) {
+            $el = '<input type="hidden" value="" ' . $this->attr->renderOnly(['name']) . '>' . "\n" . $el;
+        }
+        
+        return $el;
     }
 }

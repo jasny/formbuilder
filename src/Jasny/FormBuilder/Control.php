@@ -12,9 +12,9 @@ namespace Jasny\FormBuilder;
  * @option container        Element type for container
  * @option label            Display a label (true, false or 'inside')
  */
-abstract class Control extends Element
+abstract class Control extends Element implements WithComponents
 {
-    use RenderPartial;
+    use Components;
     use BasicValidation;
     
     /**
@@ -51,6 +51,8 @@ abstract class Control extends Element
         };
         
         parent::__construct($options, $attr);
+        
+        $this->initComponents();
     }
     
     
