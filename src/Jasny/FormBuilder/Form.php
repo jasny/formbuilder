@@ -37,13 +37,13 @@ class Form extends Group
      */
     public function getId()
     {
-        if (!isset($this->attr['id'])) {
-            $this->attr['id'] = isset($this->attr['name']) ?
-                $this->attr['name'] . '-form' :
+        if (!isset($this->options['id'])) {
+            $this->options['id'] = isset($this->options['name']) ?
+                $this->options['name'] . '-form' :
                 base_convert(uniqid(), 16, 36);
         }
         
-        return $this->attr['id'];
+        return $this->options['id'];
     }
     
     
