@@ -5,15 +5,16 @@ namespace Jasny\FormBuilder;
 /**
  * Representation of an <input> element in a form.
  * 
- * @option string    type       HTML5 input type
- * @option boolean   multiple   Allow multiple files (only for type="file")
- * @option boolean   hidden     Add hidden input for checkbox
- * @option int|float min        Minimum value
- * @option int|float max        Maximum value
- * @option int       minlength  Minimum string length
- * @option int       maxlength  Maximum string length
- * @option string    pattern    Regexp pattern that value should match
- * @option Control   match      Match value of other element (retype password)
+ * @option string    type         HTML5 input type
+ * @option boolean   placeholder  Use a placeholder
+ * @option boolean   multiple     Allow multiple files (only for type="file")
+ * @option boolean   hidden       Add hidden input for checkbox
+ * @option int|float min          Minimum value
+ * @option int|float max          Maximum value
+ * @option int       minlength    Minimum string length
+ * @option int       maxlength    Maximum string length
+ * @option string    pattern      Regexp pattern that value should match
+ * @option Control   match        Match value of other element (retype password)
  * 
  * @todo Support multiple file upload
  */
@@ -52,7 +53,9 @@ class Input extends Control
         $noPlaceholder = ['hidden', 'button', 'submit', 'reset', 'checkbox', 'radio', 'file'];
         if (!in_array($type, $noPlaceholder) && !isset($attr['placeholder'])) {
             $attr['placeholder'] = function() {
-                return $this->getOption('label') ? null : $this->getDescription();
+                $use = $this->getOption('placeholder');
+                if (!isset($use)) $use = !$this->getOption('label');
+                return $use ? $this->getDescription() : null;
             };
         }
         
