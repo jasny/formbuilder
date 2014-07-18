@@ -442,7 +442,7 @@ abstract class Element
         
         // Apply changes to optoins
         foreach ($this->getDecorators() as $decorator) {
-            $valid = $decorator->isValid($this, $valid);
+            $valid = $decorator->validate($this, $valid);
         }
         
         return $valid;

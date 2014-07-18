@@ -8,6 +8,7 @@ namespace Jasny\FormBuilder;
  * @option items            Key/value pairs used to create <option> list
  * @option selected-first   Put the selected option(s) on top of the list
  * @option multiple         Allow multiple items to be selected
+ * @option use-values       Use item value as key and value
  */
 abstract class Choice extends Control
 {
@@ -18,7 +19,10 @@ abstract class Choice extends Control
      */
     public function getItems()
     {
-        return $this->getOption('items') ?: [];
+        $items = $this->getOption('items') ?: [];
+        if ($this->getOption('use-values')) $items = array_combine($items, $items);
+        
+        return $items;
     }
     
     /**
