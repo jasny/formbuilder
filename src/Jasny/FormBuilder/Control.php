@@ -12,9 +12,9 @@ namespace Jasny\FormBuilder;
  * @option container        Element type for container
  * @option label            Display a label (true, false or 'inside')
  */
-abstract class Control extends Element
+abstract class Control extends Element implements WithComponents
 {
-    use RenderPartial;
+    use Components;
     use BasicValidation;
     
     /**
@@ -51,8 +51,21 @@ abstract class Control extends Element
         };
         
         parent::__construct($options, $attr);
+        
+        $this->initComponents();
     }
     
+    
+    /**
+     * Get the description of the element.
+     * 
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->getOption('description') ?:
+            ucfirst(preg_replace(['/^.+[\.\[]|\]/', '/[_-]/'], ['', ' '], $this->getName()));
+    }
     
     /**
      * Set the value of the element.

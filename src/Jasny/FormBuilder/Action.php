@@ -5,9 +5,9 @@ namespace Jasny\FormBuilder;
 /**
  * Base class for a link or button.
  */
-abstract class Action extends Element
+abstract class Action extends Element implements WithComponents
 {
-    use RenderPartial;
+    use Components;
     
     /**
      * Class constructor.
@@ -19,6 +19,8 @@ abstract class Action extends Element
     {
         $options += ['label'=>false, 'escape'=>true];
         parent::__construct($options, $attrs);
+        
+        $this->initComponents();
     }
     
     /**

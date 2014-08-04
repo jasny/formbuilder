@@ -13,23 +13,25 @@ use Jasny\FormBuilder;
 abstract class Element
 {
     /**
-     * Overwrite element types for factory method
+     * Element to use as factory
+     * @var Element
+     */
+    protected $builder;
+    
+    /**
+     * Overwrite element types for factory method.
+     * Only if this is the builder element.
+     * 
      * @var array
      */
-    protected static $customTypes = [];
+    protected $customTypes = [];
     
     
     /**
-     * Decorators
-     * @var Decorator[]
+     * Element of which this is a component of
+     * @var Element
      */
-    protected $decorators = [];
-    
-    /**
-     * Disabled decorators
-     * @var array
-     */
-    protected $disabledDecorators = [];
+    protected $componentOf;
     
     /**
      * Parent element
@@ -38,16 +40,28 @@ abstract class Element
     protected $parent;
     
     /**
-     * HTML attributes
-     * @var Attr
+     * Decorators
+     * @var Decorator[]
      */
-    public $attr = [];
+    protected $decorators = [];
     
     /**
      * Element options
      * @var array
      */
     protected $options = [];
+    
+    /**
+     * HTML attributes
+     * @var Attr
+     */
+    public $attr = [];
+    
+    /**
+     * The HTML content
+     * @var string|\Closure
+     */
+    protected $content;
     
     
     /**
@@ -125,6 +139,28 @@ abstract class Element
     
     
     /**
+     * Convert custom (form specific) type to general factory type.
+     * 
+     * @param string $type     (in/out) Element type
+     * @param array  $options  (in/out) Element options
+     * @param array  $attr     (in/out) HTML attributes
+     */
+    protected function convertCustomType(&$type, array &$options, array &$attr=[])
+    {
+        if (isset($this->builder)) {
+            $this->builder->convertCustomType($type, $options, $attr);
+            return;
+        }
+        
+        if (isset($this->customTypes[$type])) {
+            $custom = $this->customTypes[$type];
+            $type = $custom[0];
+            if (isset($custom[1])) $options = $custom[1] + $options;
+            if (isset($custom[2])) $attr = $custom[2] + $attr;
+        }
+    }
+    
+    /**
      * Factory method
      * 
      * @param string $type     Element type
@@ -134,14 +170,9 @@ abstract class Element
      */
     public function build($type, array $options=[], array $attr=[])
     {
-        if (isset(static::$customTypes[$type])) {
-            $custom = static::$customTypes[$type];
-            $type = $custom[0];
-            if (isset($custom[1])) $options = $custom[1] + $options;
-            if (isset($custom[2])) $attr = $custom[2] + $attr;
-        }
-        
-        if ($this->parent) return $this->parent->build($type, $options, $attr);
+        if (isset($this->builder)) return $this->builder->build($type, $options, $attr);
+
+        $this->convertCustomType($type, $options, $attr);
         
         if (is_string($type) && $type[0] === ':') {
             $method = 'build' . str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]/', ' ', substr($type, 1))));
@@ -149,7 +180,10 @@ abstract class Element
             return $this->$method(null, $options, $attr);
         }
         
-        return FormBuilder::element($type, $options, $attr);
+        $element = FormBuilder::element($type, $options, $attr);
+        $element->builder = $this;
+        
+        return $element;
     }
     
     
@@ -160,7 +194,7 @@ abstract class Element
      */
     public function getForm()
     {
-        $parent = $this->getParent();
+        $parent = $this->componentOf ?: $this->getParent();
         while ($parent && !$parent instanceof Form) {
             $parent = $parent->getParent();
         }
@@ -168,8 +202,52 @@ abstract class Element
         return $parent;
     }
 
+    
     /**
-     * Return parent object.
+     * Set element of which this a component of
+     * 
+     * @param Element $element
+     * @return Element $this
+     */
+    protected function asComponentOf(Element $element)
+    {
+        $this->componentOf = $element;
+        if (!isset($this->builder)) $this->builder = $element->builder ?: $element;
+        
+        return $this;
+    }
+    
+    /**
+     * Check if element is used as a component
+     * 
+     * @return boolean
+     */
+    public function isComponent()
+    {
+        return isset($this->componentOf);
+    }
+    
+    
+    /**
+     * Set parent element
+     * 
+     * @param Element $parent
+     * @return Element $this
+     */
+    protected function setParent(Element $parent)
+    {
+        if ($parent === $this) throw new \Exception("Parent can't be element itself for '" . $this->getName() . "'");
+        
+        if (isset($this->parent)) $this->parent->remove($this);
+
+        $this->parent = $parent;
+        if (!isset($this->builder)) $this->builder = $parent->builder ?: $parent;
+        
+        return $this;
+    }
+    
+    /**
+     * Return parent element
      * 
      * @return Group
      */
@@ -178,14 +256,15 @@ abstract class Element
         return $this->parent;
     }
 
+    
     /**
-     * Alias of Element::getParent()
+     * Get parent or element of which this is an component.
      * 
      * @return Group
      */
-    final public function end()
+    public function end()
     {
-        return $this->getParent();
+        return $this->componentOf ?: $this->getParent();
     }
     
     
@@ -196,7 +275,7 @@ abstract class Element
      */
     public function getId()
     {
-        if (!$this->getOption('id')) {
+        if (!isset($this->options['id'])) {
             $form = $this->getForm();
             
             if ($form) {
@@ -208,10 +287,10 @@ abstract class Element
                 $id = base_convert(uniqid(), 16, 32);
             }
 
-            $this->setOptions('id', $id);
+            $this->options['id'] = $id;
         }
         
-        return $this->getOption('id');
+        return $this->options['id'];
     }
     
     /**
@@ -363,7 +442,7 @@ abstract class Element
         
         // Apply changes to optoins
         foreach ($this->getDecorators() as $decorator) {
-            $valid = $decorator->isValid($this, $valid);
+            $valid = $decorator->validate($this, $valid);
         }
         
         return $valid;
@@ -381,11 +460,59 @@ abstract class Element
     
     
     /**
-     * Render the element to HTML (without decoration).
+     * Set element content
+     * 
+     * @param string|\Closure $content  Content as HTML
+     * @return Node $this
+     */
+    public function setContent($content)
+    {
+        $this->content = $content;
+        return $this;
+    }
+    
+    /**
+     * Get the element content
      * 
      * @return string
      */
-    abstract protected function render();
+    final public function getContent()
+    {
+        $content = $this->renderContent();
+        
+        foreach ($this->getDecorators() as $decorator) {
+            $content = $decorator->renderContent($this, $content);
+        }
+        
+        return $content;
+    }
+    
+    
+    /**
+     * Render the element content
+     * 
+     * @return string
+     */
+    protected function renderContent()
+    {
+        if (!isset($this->content)) return null;
+        
+        $content = $this->content;
+        if ($content instanceof \Closure) $content = $content();
+        
+        return (string)$content;
+    }
+    
+    /**
+     * Render the element
+     * 
+     * @return string
+     */
+    protected function render()
+    {
+        $tagname = $this::TAGNAME;
+        return "<{$tagname} {$this->attr}>" . $this->getContent() . "</{$tagname}>";
+    }
 
     /**
      * Render the element to HTML.
@@ -442,5 +569,69 @@ abstract class Element
         if ($value instanceof Control) return $value->getValue();
         if ($value instanceof \DateTime) return strftime('%x', $value->getTimestamp());
         return (string)$value;
+    }
+    
+    
+    /**
+     * Convert an element to another type.
+     * Simply returns $this if element is aleady of correct type.
+     * 
+     * @param string $type
+     * @return Element
+     */
+    public function convertTo($type)
+    {
+        $options = [];
+        $attr = [];
+        $this->convertCustomType($type, $options, $attr);
+        
+        if (isset(FormBuilder::$elements[$type]) && is_a($this, FormBuilder::$elements[$type][0])) {
+            return $this;
+        }
+        
+        $new = $this->build($type);
+        
+        foreach ($this as $prop=>$value) {
+            $new->$prop = $value;
+        }
+        
+        $new->setOption($options);
+        $new->setAttr($attr);
+        
+        $new->onClone();
+        
+        if (isset($this->parent)) {
+            foreach ($this->parent->children as &$child) {
+                if ($child === $this) $child = $new;
+            }
+        }
+        
+        return $new;
+    }
+
+    /**
+     * Magic method called after cloning element
+     */
+    public function __clone()
+    {
+        $this->onClone();
+    }
+    
+    /**
+     * Method called after cloning on copying element
+     */
+    protected function onClone()
+    {
+        foreach ($this as &$value) {
+            if ($value instanceof \Closure) $value->bindTo($this);
+        }
+        
+        foreach ($this->attr as &$value) {
+            if ($value instanceof \Closure) $value->bindTo($this);
+        }
+        
+        foreach ($this->attr['class'] as &$value) {
+            if ($value instanceof \Closure) $value->bindTo($this);
+        }
     }
 }

@@ -73,7 +73,7 @@ class Group extends Element
             $child = $this->build($child, $options, $attr);
         }
         
-        if ($child instanceof Element) $child->parent = $this;
+        if ($child instanceof Element) $child->setParent($this);
         $this->children[] = $child;
         
         if ($child instanceof Element) $child->applyDeepDecorators($this);
@@ -117,28 +117,36 @@ class Group extends Element
     /**
      * Find a specific child through deep search.
      * 
-     * @param string  $name    Element name or #id
-     * @param boolean $unlink  Unlink the found element
+     * @param Element|string $element  Element name or #id
+     * @param boolean        $unlink   Unlink the found element
      * @return Element
      */
-    protected function deepSearch($name, $unlink = false)
+    protected function deepSearch($element, $unlink=false)
     {
-        if ($name[0] == '#') {
-            $id = substr($name, 1);
-            unset($name);
+        if (is_string($element)) {
+            if ($element[0] === '#') {
+                $id = substr($element, 1);
+            } else {
+                $name = $element;
+            }
         }
         
+        $found = null;
         foreach ($this->children as $i=>$child) {
             if (!$child instanceof Element) continue;
             
-            if (isset($id) && $child->getId() === $id) {
-                $found = $child;
-                if ($unlink) unset($this->children[$i]);
-            } elseif (isset($name) && $child->getName() == $name) {
-                $found = $child;
-                if ($unlink) unset($this->children[$i]);
-            } elseif ($child instanceof Group) {
-                $found = $child->deepSearch($name);
+            if (isset($id)) {
+                if ($child->getId() === $id) $found = $child;
+            } elseif (isset($name)) {
+                if ($child->getName() == $name) $found = $child;
+            } elseif (isset($element)) {
+                if ($child === $element) $found = $child;
+            }
+            
+            if ($found && $unlink) unset($this->children[$i]);
+            
+            if (!$found && $child instanceof Group) {
+                $found = $child->deepSearch($element);
             }
             
             if (isset($found)) return $found;
@@ -186,23 +194,31 @@ class Group extends Element
     /**
      * Remove a specific child (deep search)
      * 
-     * @param string $name  Element name or #id
+     * @param Element|string $element  Element, element name or #id
      * @return Group $this
      */
-    public function remove($name)
+    public function remove($element)
     {
-        $this->deepSearch($name, true);
+        if ($this->deepSearch($element, true)) {
+            $element->parent = null;
+        }
+        
         return $this;
     }
     
     /**
-     * Remove all children
+     * Set the element content.
      * 
-     * @return Group $this
+     * @param string $content
+     * @return $this
      */
-    public function clear()
+    public function setContent($content)
     {
-        $this->children = [];
+        foreach ($this->children as $child) {
+            if ($child instanceof Element) $child->parent = null;
+        }
+        
+        $this->children = isset($content) ? [$content] : [];
         return $this;
     }
     
@@ -280,23 +296,6 @@ class Group extends Element
         $tagname = $this::TAGNAME;
         return $tagname ? "</{$tagname}>" : null;
     }
-
-    /**
-     * Get the element content as HTML
-     * 
-     * @return string
-     */
-    public function getContent()
-    {
-        $content = $this->renderContent();
-        
-        foreach ($this->getDecorators() as $decorator) {
-            $decorator->renderContent($this, $content);
-        }
-        
-        return (string)$content;
-    }
-    
     
     /**
      * Render the content of the HTML element.

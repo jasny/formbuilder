@@ -242,6 +242,16 @@ class Attr extends \ArrayIterator
     }
 
     /**
+     * Unset value at offset
+     * 
+     * @param string $index
+     */
+    public function offsetUnset($index)
+    {
+        parent::offsetExists($index) && parent::offsetUnset($index);
+    }
+    
+    /**
      * Set value for an offset
      * 
      * @param string $index   The index to set for.

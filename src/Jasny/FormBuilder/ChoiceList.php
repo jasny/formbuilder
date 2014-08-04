@@ -34,6 +34,7 @@ class ChoiceList extends Choice
         $this->getId();
         $name = $this->getName();
         $value = $this->getValue();
+        $items = $this->getItems();
         $required = $this->getOption('required');
         $type = $this->getOption('multiple') ? 'checkbox' : 'radio';
 
@@ -43,7 +44,7 @@ class ChoiceList extends Choice
         // Build inputs
         $inputs = $inputs_first = [];
         
-        foreach ($this->items as $key=>$val) {
+        foreach ($items as $key=>$val) {
             $selected = !is_array($value) ? (string)$key === (string)$value : in_array($key, $value);
             
             $html_attrs = 'type="' . $type . '" name="' . htmlentities($name) . '"'
